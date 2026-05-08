@@ -265,3 +265,67 @@ INSERT INTO vehicle_status_log (log_id, vehicle_vin, from_status, to_status, cha
 (11005, 'VIN00000000000023', 'IN_TRANSIT', 'IN_INVENTORY', '2026-01-26 10:00:00', 7, 'Arrived at dealership');
 
 COMMIT;
+
+-- =========================
+-- 12) Align IDENTITY sequences to MAX(id)+1
+-- (important after manual explicit-id inserts)
+-- =========================
+SELECT setval(
+    pg_get_serial_sequence('brand', 'brand_id'),
+    COALESCE((SELECT MAX(brand_id) FROM brand), 0) + 1,
+    false
+);
+
+SELECT setval(
+    pg_get_serial_sequence('model', 'model_id'),
+    COALESCE((SELECT MAX(model_id) FROM model), 0) + 1,
+    false
+);
+
+SELECT setval(
+    pg_get_serial_sequence('customer', 'customer_id'),
+    COALESCE((SELECT MAX(customer_id) FROM customer), 0) + 1,
+    false
+);
+
+SELECT setval(
+    pg_get_serial_sequence('staff', 'staff_id'),
+    COALESCE((SELECT MAX(staff_id) FROM staff), 0) + 1,
+    false
+);
+
+SELECT setval(
+    pg_get_serial_sequence('customer_intent', 'intent_id'),
+    COALESCE((SELECT MAX(intent_id) FROM customer_intent), 0) + 1,
+    false
+);
+
+SELECT setval(
+    pg_get_serial_sequence('sales_order', 'order_id'),
+    COALESCE((SELECT MAX(order_id) FROM sales_order), 0) + 1,
+    false
+);
+
+SELECT setval(
+    pg_get_serial_sequence('order_item', 'item_id'),
+    COALESCE((SELECT MAX(item_id) FROM order_item), 0) + 1,
+    false
+);
+
+SELECT setval(
+    pg_get_serial_sequence('service_order', 'service_order_id'),
+    COALESCE((SELECT MAX(service_order_id) FROM service_order), 0) + 1,
+    false
+);
+
+SELECT setval(
+    pg_get_serial_sequence('service_item', 'item_id'),
+    COALESCE((SELECT MAX(item_id) FROM service_item), 0) + 1,
+    false
+);
+
+SELECT setval(
+    pg_get_serial_sequence('vehicle_status_log', 'log_id'),
+    COALESCE((SELECT MAX(log_id) FROM vehicle_status_log), 0) + 1,
+    false
+);
