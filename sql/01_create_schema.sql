@@ -120,7 +120,7 @@ CREATE TABLE sales_order (
         CHECK (deposit_amount <= total_amount),
     CONSTRAINT uk_sales_order_vehicle_vin UNIQUE (vehicle_vin),
     CONSTRAINT ck_sales_order_status
-        CHECK (order_status IN ('CREATED', 'LOCKED', 'DEPOSIT_PAID', 'COMPLETED', 'CANCELLED'))
+        CHECK (order_status IN ('LOCKED', 'DEPOSIT_PAID', 'COMPLETED', 'CANCELLED'))
 );
 
 CREATE TABLE order_item (
