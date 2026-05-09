@@ -151,6 +151,60 @@ END;
 $$;
 
 -- ==========================================================
+-- Procedure 3: sp_get_customer_full_history
+-- Return complete customer purchase + after-sales timeline.
+-- ==========================================================
+CREATE OR REPLACE PROCEDURE sp_get_customer_full_history(
+    IN     p_customer_id INT,
+    INOUT  p_result      REFCURSOR DEFAULT 'cur_customer_history'
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    OPEN p_result FOR
+    SELECT
+        t.customer_id,
+        t.event_time,
+        t.event_type,
+        t.ref_no,
+        t.status,
+        t.amount,
+        t.vehicle_vin,
+        t.staff_name
+    FROM (
+        SELECT
+            so.customer_id,
+            so.created_at AS event_time,
+            'SALES_ORDER'::VARCHAR(20) AS event_type,
+            so.order_id::VARCHAR(50) AS ref_no,
+            so.order_status AS status,
+            so.total_amount AS amount,
+            so.vehicle_vin,
+            st.staff_name
+        FROM sales_order so
+        JOIN staff st ON st.staff_id = so.staff_id
+        WHERE so.customer_id = p_customer_id
+
+        UNION ALL
+
+        SELECT
+            sv.customer_id,
+            sv.created_at AS event_time,
+            'SERVICE_ORDER'::VARCHAR(20) AS event_type,
+            sv.service_order_id::VARCHAR(50) AS ref_no,
+            sv.status AS status,
+            sv.total_fee AS amount,
+            sv.vehicle_vin,
+            st.staff_name
+        FROM service_order sv
+        JOIN staff st ON st.staff_id = sv.staff_id
+        WHERE sv.customer_id = p_customer_id
+    ) t
+    ORDER BY t.event_time, t.event_type;
+END;
+$$;
+
+-- ==========================================================
 -- Future procedure candidates (for iterative upgrade)
 -- ==========================================================
 -- 1) sp_cancel_sales_order
@@ -179,6 +233,3 @@ $$;
 --
 -- 9) sp_get_inventory_alert
 --    Return models below safety_stock_threshold for replenishment alerts.
---
--- 10) sp_get_customer_history
---     Return complete customer purchase + after-sales timeline.
