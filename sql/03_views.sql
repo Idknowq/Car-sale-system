@@ -50,7 +50,8 @@ WHERE so.order_status = 'COMPLETED'
 GROUP BY
     so.staff_id, st.staff_no, st.staff_name,
     EXTRACT(YEAR FROM so.created_at),
-    EXTRACT(QUARTER FROM so.created_at)
+    EXTRACT(QUARTER FROM so.created_at),
+    TO_CHAR(so.created_at, 'YYYY')
 
 UNION ALL
 
@@ -72,7 +73,8 @@ JOIN vehicle v ON v.vehicle_vin = so.vehicle_vin
 WHERE so.order_status = 'COMPLETED'
 GROUP BY
     so.staff_id, st.staff_no, st.staff_name,
-    EXTRACT(YEAR FROM so.created_at);
+    EXTRACT(YEAR FROM so.created_at),
+    TO_CHAR(so.created_at, 'YYYY');
 
 -- 2) Inventory summary view (real-time by model)
 CREATE OR REPLACE VIEW v_inventory_summary AS
