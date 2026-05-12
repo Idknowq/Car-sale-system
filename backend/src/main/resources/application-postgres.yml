@@ -1,0 +1,9 @@
+app:
+  db-vendor: postgres
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/car_sales
+    username: postgres
+    password: postgres

@@ -1,13 +1,47 @@
-# Maven
-/target/
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
 
+# =========================
 # IDE
+# =========================
 .idea/
 .vscode/
 *.iml
 
-# OS
-.DS_Store
+# =========================
+# Java / Maven / Gradle
+# =========================
+target/
+**/target/
+.classpath
+.project
+.settings/
+*.log
 
-# Local sensitive configs
+# =========================
+# Frontend (Node/Vite)
+# =========================
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.pnpm-store/
+npm-debug.log*
+yarn-error.log*
+
+# =========================
+# Env / local secrets
+# =========================
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Legacy console local config
 src/main/resources/application.properties
+
+# Web backend local config (if created for local override)
+backend/src/main/resources/application-local.yml
