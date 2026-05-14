@@ -1,4 +1,4 @@
-package com.carsales.backend.service.impl.inventory;
+package com.carsales.backend.service.inventory.impl;
 
 import com.carsales.backend.common.exception.BizException;
 import com.carsales.backend.mapper.Inventory.InventoryMapper;
