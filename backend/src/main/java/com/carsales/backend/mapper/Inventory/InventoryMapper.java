@@ -1,6 +1,6 @@
-package com.carsales.backend.mapper.Inventory;
+package com.carsales.backend.mapper.inventory;
 
-import com.carsales.backend.model.dto.Inventory.InventoryVehicleQueryDto;
+import com.carsales.backend.model.dto.inventory.InventoryVehicleQueryDto;
 import com.carsales.backend.model.vo.inventory.InventoryVehicleVo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

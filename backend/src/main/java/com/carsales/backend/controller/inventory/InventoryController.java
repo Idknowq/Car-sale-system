@@ -1,7 +1,7 @@
 package com.carsales.backend.controller.inventory;
 
 import com.carsales.backend.common.api.ApiResponse;
-import com.carsales.backend.model.dto.Inventory.InventoryVehicleQueryDto;
+import com.carsales.backend.model.dto.inventory.InventoryVehicleQueryDto;
 import com.carsales.backend.model.vo.common.PageResult;
 import com.carsales.backend.model.vo.inventory.InventoryVehicleVo;
 import com.carsales.backend.service.inventory.InventoryService;

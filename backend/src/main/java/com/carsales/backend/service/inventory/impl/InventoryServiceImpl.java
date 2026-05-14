@@ -1,8 +1,8 @@
 package com.carsales.backend.service.inventory.impl;
 
 import com.carsales.backend.common.exception.BizException;
-import com.carsales.backend.mapper.Inventory.InventoryMapper;
-import com.carsales.backend.model.dto.Inventory.InventoryVehicleQueryDto;
+import com.carsales.backend.mapper.inventory.InventoryMapper;
+import com.carsales.backend.model.dto.inventory.InventoryVehicleQueryDto;
 import com.carsales.backend.model.vo.common.PageResult;
 import com.carsales.backend.model.vo.inventory.InventoryVehicleVo;
 import com.carsales.backend.service.inventory.InventoryService;

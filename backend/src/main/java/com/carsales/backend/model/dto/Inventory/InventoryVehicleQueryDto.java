@@ -1,4 +1,4 @@
-package com.carsales.backend.model.dto.Inventory;
+package com.carsales.backend.model.dto.inventory;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
