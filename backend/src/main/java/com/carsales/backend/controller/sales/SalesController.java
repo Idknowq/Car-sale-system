@@ -2,11 +2,15 @@ package com.carsales.backend.controller.sales;
 
 import com.carsales.backend.common.api.ApiResponse;
 import com.carsales.backend.model.dto.CreateSalesOrderRequest;
+import com.carsales.backend.model.dto.MyOrderQueryRequest;
 import com.carsales.backend.model.vo.CreateSalesOrderResponse;
+import com.carsales.backend.model.vo.MyOrderItemVo;
+import com.carsales.backend.model.vo.PageResult;
 import com.carsales.backend.model.vo.SalesOrderVo;
 import com.carsales.backend.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,5 +40,10 @@ public class SalesController {
     @GetMapping("/orders/{orderId}")
     public ApiResponse<SalesOrderVo> getOrderById(@PathVariable Integer orderId) {
         return ApiResponse.ok(orderService.getOrderById(orderId));
+    }
+
+    @GetMapping("/orders/mine")
+    public ApiResponse<PageResult<MyOrderItemVo>> queryMyOrders(@ModelAttribute MyOrderQueryRequest request) {
+        return ApiResponse.ok(orderService.queryMyOrders(request));
     }
 }

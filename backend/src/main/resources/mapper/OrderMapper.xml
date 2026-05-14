@@ -4,6 +4,31 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.carsales.backend.mapper.OrderMapper">
 
+    <sql id="myOrderWhere">
+        WHERE so.staff_id = #{staffId}
+        <if test="customerId != null">
+            AND so.customer_id = #{customerId}
+        </if>
+        <if test="customerName != null and customerName != ''">
+            AND c.customer_name LIKE CONCAT('%', #{customerName}, '%')
+        </if>
+        <if test="phone != null and phone != ''">
+            AND c.phone = #{phone}
+        </if>
+        <if test="orderStatus != null and orderStatus != ''">
+            AND so.order_status = #{orderStatus}
+        </if>
+        <if test="vehicleVin != null and vehicleVin != ''">
+            AND so.vehicle_vin = #{vehicleVin}
+        </if>
+        <if test="createdAtStart != null">
+            AND so.created_at <![CDATA[>=]]> #{createdAtStart}
+        </if>
+        <if test="createdAtEnd != null">
+            AND so.created_at <![CDATA[<=]]> #{createdAtEnd}
+        </if>
+    </sql>
+
     <select id="callCreateSalesOrder" statementType="CALLABLE" parameterType="map">
         {call sp_create_sales_order(
             #{customerId, mode=IN, jdbcType=INTEGER},
@@ -32,5 +57,32 @@
             delivery_time
         FROM sales_order
         WHERE order_id = #{orderId}
+    </select>
+
+    <select id="selectMyOrders" resultType="com.carsales.backend.model.vo.MyOrderItemVo">
+        SELECT
+            so.order_id,
+            so.customer_id,
+            c.customer_name,
+            c.phone,
+            so.staff_id,
+            so.vehicle_vin,
+            so.total_amount,
+            so.deposit_amount,
+            so.order_status,
+            so.created_at,
+            so.delivery_time
+        FROM sales_order so
+        JOIN customer c ON c.customer_id = so.customer_id
+        <include refid="myOrderWhere"/>
+        ORDER BY so.created_at DESC, so.order_id DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countMyOrders" resultType="long">
+        SELECT COUNT(*)
+        FROM sales_order so
+        JOIN customer c ON c.customer_id = so.customer_id
+        <include refid="myOrderWhere"/>
     </select>
 </mapper>
