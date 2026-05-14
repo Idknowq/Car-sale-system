@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.carsales.backend.mapper.inventory.InventoryMapper">
+
+    <sql id="BaseFromAndWhere">
+        FROM vehicle v
+        JOIN model m ON m.model_id = v.model_id
+        JOIN brand b ON b.brand_id = m.brand_id
+        <where>
+            <if test="query.vehicleVin != null and query.vehicleVin != ''">
+                AND v.vehicle_vin LIKE CONCAT(#{query.vehicleVin}, '%')
+            </if>
+            <if test="query.brandId != null">
+                AND b.brand_id = #{query.brandId}
+            </if>
+            <if test="query.modelId != null">
+                AND m.model_id = #{query.modelId}
+            </if>
+            <if test="query.currentStatus != null and query.currentStatus != ''">
+                AND v.current_status = #{query.currentStatus}
+            </if>
+            <if test="query.color != null and query.color != ''">
+                AND v.color = #{query.color}
+            </if>
+            <if test="query.inventoryInDateStart != null">
+                AND v.inventory_in_date &gt;= #{query.inventoryInDateStart}
+            </if>
+            <if test="query.inventoryInDateEnd != null">
+                AND v.inventory_in_date &lt;= #{query.inventoryInDateEnd}
+            </if>
+            <if test="query.manufactureDateStart != null">
+                AND v.manufacture_date &gt;= #{query.manufactureDateStart}
+            </if>
+            <if test="query.manufactureDateEnd != null">
+                AND v.manufacture_date &lt;= #{query.manufactureDateEnd}
+            </if>
+        </where>
+    </sql>
+
+    <select id="queryVehicles" resultType="com.carsales.backend.model.vo.inventory.InventoryVehicleVo">
+        SELECT
+            v.vehicle_vin,
+            v.model_id,
+            b.brand_id,
+            b.brand_name,
+            m.model_name,
+            m.model_year,
+            m.trim_name,
+            v.engine_no,
+            v.color,
+            v.manufacture_date,
+            v.inventory_in_date,
+            v.purchase_cost,
+            v.suggested_retail_price,
+            v.current_status
+        <include refid="BaseFromAndWhere"/>
+        <choose>
+            <when test="query.sortBy == 'inventoryInDate'">
+                ORDER BY v.inventory_in_date
+            </when>
+            <when test="query.sortBy == 'manufactureDate'">
+                ORDER BY v.manufacture_date
+            </when>
+            <when test="query.sortBy == 'suggestedRetailPrice'">
+                ORDER BY v.suggested_retail_price
+            </when>
+            <when test="query.sortBy == 'purchaseCost'">
+                ORDER BY v.purchase_cost
+            </when>
+            <when test="query.sortBy == 'vehicleVin'">
+                ORDER BY v.vehicle_vin
+            </when>
+            <otherwise>
+                ORDER BY v.inventory_in_date DESC NULLS LAST, v.vehicle_vin ASC
+            </otherwise>
+        </choose>
+        <if test="query.sortBy != null and query.sortBy != ''">
+            <choose>
+                <when test="query.sortOrder == 'asc' or query.sortOrder == 'ASC'">
+                    ASC
+                </when>
+                <otherwise>
+                    DESC
+                </otherwise>
+            </choose>
+            NULLS LAST, v.vehicle_vin ASC
+        </if>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countVehicles" resultType="long">
+        SELECT COUNT(1)
+        <include refid="BaseFromAndWhere"/>
+    </select>
+</mapper>

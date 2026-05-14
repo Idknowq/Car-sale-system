@@ -14,8 +14,22 @@ public class GlobalExceptionHandler {
         return ApiResponse.fail(e.getCode(), e.getMessage());
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, IllegalArgumentException.class})
-    public ApiResponse<Void> handleBadRequest(Exception e) {
+    @SuppressWarnings("null")
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ApiResponse<Void> handleMethodArgNotValid(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getFieldError() == null
+                ? "invalid request"
+                : e.getBindingResult().getFieldError().getDefaultMessage();
+        return ApiResponse.fail(400, message);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ApiResponse<Void> handleConstraintViolation(ConstraintViolationException e) {
+        return ApiResponse.fail(400, e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ApiResponse<Void> handleIllegalArgument(IllegalArgumentException e) {
         return ApiResponse.fail(400, e.getMessage());
     }
 
