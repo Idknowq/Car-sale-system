@@ -25,13 +25,13 @@ public class InventoryServiceImpl implements InventoryService {
         validateDateRange(query.getInventoryInDateStart(), query.getInventoryInDateEnd(), "inventoryInDate");
         validateDateRange(query.getManufactureDateStart(), query.getManufactureDateEnd(), "manufactureDate");
 
-        int pageNum = query.getPageNum() == null ? 1 : query.getPageNum();
+        int pageNo = query.getPageNum() == null ? 1 : query.getPageNum();
         int pageSize = query.getPageSize() == null ? 10 : query.getPageSize();
-        int offset = (pageNum - 1) * pageSize;
+        int offset = (pageNo - 1) * pageSize;
 
-        List<InventoryVehicleVo> list = inventoryMapper.queryVehicles(query, offset, pageSize);
+        List<InventoryVehicleVo> records = inventoryMapper.queryVehicles(query, offset, pageSize);
         long total = inventoryMapper.countVehicles(query);
-        return new PageResult<>(list, total, pageNum, pageSize);
+        return new PageResult<>(total, pageNo, pageSize, records);
     }
 
     private void validateDateRange(LocalDate start, LocalDate end, String field) {

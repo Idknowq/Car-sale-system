@@ -3,25 +3,19 @@ package com.carsales.backend.model.vo.common;
 import java.util.List;
 
 public class PageResult<T> {
-
-    private List<T> list;
     private long total;
-    private int pageNum;
+    private int pageNo;
     private int pageSize;
+    private List<T> records;
 
-    public PageResult(List<T> list, long total, int pageNum, int pageSize) {
-        this.list = list;
+    public PageResult() {
+    }
+
+    public PageResult(long total, int pageNo, int pageSize, List<T> records) {
         this.total = total;
-        this.pageNum = pageNum;
+        this.pageNo = pageNo;
         this.pageSize = pageSize;
-    }
-
-    public List<T> getList() {
-        return list;
-    }
-
-    public void setList(List<T> list) {
-        this.list = list;
+        this.records = records;
     }
 
     public long getTotal() {
@@ -32,12 +26,12 @@ public class PageResult<T> {
         this.total = total;
     }
 
-    public int getPageNum() {
-        return pageNum;
+    public int getPageNo() {
+        return pageNo;
     }
 
-    public void setPageNum(int pageNum) {
-        this.pageNum = pageNum;
+    public void setPageNo(int pageNo) {
+        this.pageNo = pageNo;
     }
 
     public int getPageSize() {
@@ -46,5 +40,13 @@ public class PageResult<T> {
 
     public void setPageSize(int pageSize) {
         this.pageSize = pageSize;
+    }
+
+    public List<T> getRecords() {
+        return records;
+    }
+
+    public void setRecords(List<T> records) {
+        this.records = records;
     }
 }
