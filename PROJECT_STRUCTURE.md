@@ -53,7 +53,10 @@ backend/src/main/java/com/carsales/backend
 
 ```text
 backend/src/main/resources/mapper/
-├─ inventory_mapper.xml
+├─ inventory/
+│  └─ inventory_mapper.xml
+├─ sales/
+│  └─ OrderMapper.xml
 └─ placeholder.xml
 ```
 
@@ -62,5 +65,5 @@ backend/src/main/resources/mapper/
 1. 业务服务目录统一采用：`service/<module>/` + `service/<module>/impl/`。
 2. Controller 按业务域拆分到 `controller/<module>/`。
 3. DTO/VO 按业务域拆分到 `model/dto/<module>/` 与 `model/vo/<module>/`。
-4. Mapper 接口按业务域拆分到 `mapper/<module>/`，SQL 放 `resources/mapper/*.xml`。
+4. Mapper 接口按业务域拆分到 `mapper/<module>/`，XML 按业务域放在 `resources/mapper/<module>/*.xml`。
 5. 新增写接口时必须补事务与参数校验，写操作 SQL 必须参数化。
