@@ -1,4 +1,4 @@
-package com.carsales.backend.model.vo;
+package com.carsales.backend.model.vo.sales;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

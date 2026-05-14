@@ -1,4 +1,4 @@
-package com.carsales.backend.model.dto;
+package com.carsales.backend.model.dto.sales;
 
 import org.springframework.format.annotation.DateTimeFormat;
 

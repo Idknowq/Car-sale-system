@@ -1,4 +1,4 @@
-package com.carsales.backend.model.vo;
+package com.carsales.backend.model.vo.common;
 
 import java.util.List;
 

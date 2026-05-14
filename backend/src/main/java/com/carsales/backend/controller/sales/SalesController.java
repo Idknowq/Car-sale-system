@@ -1,13 +1,13 @@
 package com.carsales.backend.controller.sales;
 
 import com.carsales.backend.common.api.ApiResponse;
-import com.carsales.backend.model.dto.CreateSalesOrderRequest;
-import com.carsales.backend.model.dto.MyOrderQueryRequest;
-import com.carsales.backend.model.vo.CreateSalesOrderResponse;
-import com.carsales.backend.model.vo.MyOrderItemVo;
-import com.carsales.backend.model.vo.PageResult;
-import com.carsales.backend.model.vo.SalesOrderVo;
-import com.carsales.backend.service.OrderService;
+import com.carsales.backend.model.dto.sales.CreateSalesOrderRequest;
+import com.carsales.backend.model.dto.sales.MyOrderQueryRequest;
+import com.carsales.backend.model.vo.sales.CreateSalesOrderResponse;
+import com.carsales.backend.model.vo.sales.MyOrderItemVo;
+import com.carsales.backend.model.vo.common.PageResult;
+import com.carsales.backend.model.vo.sales.SalesOrderVo;
+import com.carsales.backend.service.sales.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;

@@ -1,4 +1,4 @@
-package com.carsales.backend.model.dto;
+package com.carsales.backend.model.dto.sales;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;

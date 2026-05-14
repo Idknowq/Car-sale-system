@@ -1,14 +1,14 @@
-package com.carsales.backend.service.impl;
+package com.carsales.backend.service.sales.impl;
 
 import com.carsales.backend.common.exception.BizException;
-import com.carsales.backend.mapper.OrderMapper;
-import com.carsales.backend.model.dto.CreateSalesOrderRequest;
-import com.carsales.backend.model.dto.MyOrderQueryRequest;
-import com.carsales.backend.model.vo.CreateSalesOrderResponse;
-import com.carsales.backend.model.vo.MyOrderItemVo;
-import com.carsales.backend.model.vo.PageResult;
-import com.carsales.backend.model.vo.SalesOrderVo;
-import com.carsales.backend.service.OrderService;
+import com.carsales.backend.mapper.sales.OrderMapper;
+import com.carsales.backend.model.dto.sales.CreateSalesOrderRequest;
+import com.carsales.backend.model.dto.sales.MyOrderQueryRequest;
+import com.carsales.backend.model.vo.sales.CreateSalesOrderResponse;
+import com.carsales.backend.model.vo.sales.MyOrderItemVo;
+import com.carsales.backend.model.vo.common.PageResult;
+import com.carsales.backend.model.vo.sales.SalesOrderVo;
+import com.carsales.backend.service.sales.OrderService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

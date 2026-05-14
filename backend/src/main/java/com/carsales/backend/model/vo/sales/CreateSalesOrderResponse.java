@@ -1,4 +1,4 @@
-package com.carsales.backend.model.vo;
+package com.carsales.backend.model.vo.sales;
 
 public class CreateSalesOrderResponse {
     private Integer orderId;

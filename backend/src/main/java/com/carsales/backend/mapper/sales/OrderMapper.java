@@ -1,7 +1,7 @@
-package com.carsales.backend.mapper;
+package com.carsales.backend.mapper.sales;
 
-import com.carsales.backend.model.vo.MyOrderItemVo;
-import com.carsales.backend.model.vo.SalesOrderVo;
+import com.carsales.backend.model.vo.sales.MyOrderItemVo;
+import com.carsales.backend.model.vo.sales.SalesOrderVo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
