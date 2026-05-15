@@ -46,4 +46,22 @@
         LIMIT #{topN}
     </select>
 
+    <select id="selectBestSellingModels" resultType="com.carsales.backend.model.vo.report.BestSellingModelRankingItemVo">
+        SELECT
+            b.brand_name,
+            m.model_name,
+            m.model_year,
+            m.trim_name,
+            COUNT(*)::INT AS sales_volume,
+            SUM(so.total_amount)::NUMERIC(14, 2) AS sales_amount
+        FROM sales_order so
+        JOIN vehicle v ON v.vehicle_vin = so.vehicle_vin
+        JOIN model m ON m.model_id = v.model_id
+        JOIN brand b ON b.brand_id = m.brand_id
+        WHERE so.order_status = 'COMPLETED'
+        GROUP BY b.brand_name, m.model_name, m.model_year, m.trim_name
+        ORDER BY sales_volume DESC, b.brand_name, m.model_name
+        LIMIT #{topN}
+    </select>
+
 </mapper>

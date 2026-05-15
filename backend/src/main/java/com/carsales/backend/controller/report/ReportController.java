@@ -1,7 +1,9 @@
 package com.carsales.backend.controller.report;
 
 import com.carsales.backend.common.api.ApiResponse;
+import com.carsales.backend.model.dto.report.BestSellingModelQueryDto;
 import com.carsales.backend.model.dto.report.SalesPerformanceRankingQueryDto;
+import com.carsales.backend.model.vo.report.BestSellingModelRankingItemVo;
 import com.carsales.backend.model.vo.report.SalesPerformanceRankingItemVo;
 import com.carsales.backend.service.report.ReportService;
 import jakarta.validation.Valid;
@@ -31,5 +33,10 @@ public class ReportController {
     @GetMapping("/sales-performance/ranking")
     public ApiResponse<List<SalesPerformanceRankingItemVo>> querySalesPerformanceRanking(@Valid SalesPerformanceRankingQueryDto query) {
         return ApiResponse.ok(reportService.querySalesPerformanceRanking(query));
+    }
+
+    @GetMapping("/best-selling-models")
+    public ApiResponse<List<BestSellingModelRankingItemVo>> queryBestSellingModels(@Valid BestSellingModelQueryDto query) {
+        return ApiResponse.ok(reportService.queryBestSellingModels(query));
     }
 }

@@ -2,7 +2,9 @@ package com.carsales.backend.service.report.impl;
 
 import com.carsales.backend.common.exception.BizException;
 import com.carsales.backend.mapper.report.ReportMapper;
+import com.carsales.backend.model.dto.report.BestSellingModelQueryDto;
 import com.carsales.backend.model.dto.report.SalesPerformanceRankingQueryDto;
+import com.carsales.backend.model.vo.report.BestSellingModelRankingItemVo;
 import com.carsales.backend.model.vo.report.SalesPerformanceRankingItemVo;
 import com.carsales.backend.service.report.ReportService;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,15 @@ public class ReportServiceImpl implements ReportService {
                 query.getStatMonth(),
                 query.getTopN()
         );
+    }
+
+    @Override
+    public List<BestSellingModelRankingItemVo> queryBestSellingModels(BestSellingModelQueryDto query) {
+        Integer topN = query.getTopN() == null ? 5 : query.getTopN();
+        if (topN <= 0 || topN > 100) {
+            throw new BizException(40021, "topN must be between 1 and 100");
+        }
+        return reportMapper.selectBestSellingModels(topN);
     }
 
     private void validatePeriodCondition(SalesPerformanceRankingQueryDto query) {
