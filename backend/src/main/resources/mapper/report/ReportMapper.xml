@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.carsales.backend.mapper.report.ReportMapper">
+
+    <select id="selectSalesPerformanceRanking" resultType="com.carsales.backend.model.vo.report.SalesPerformanceRankingItemVo">
+        SELECT
+            period_type,
+            stat_year,
+            stat_quarter,
+            stat_month,
+            period_label,
+            staff_id,
+            staff_no,
+            staff_name,
+            order_count,
+            sales_amount,
+            gross_profit,
+            sales_rank
+        FROM (
+            SELECT
+                period_type,
+                stat_year,
+                stat_quarter,
+                stat_month,
+                period_label,
+                staff_id,
+                staff_no,
+                staff_name,
+                order_count,
+                sales_amount,
+                gross_profit,
+                DENSE_RANK() OVER (ORDER BY sales_amount DESC) AS sales_rank
+            FROM v_sales_performance
+            WHERE period_type = #{periodType}
+              AND stat_year = #{statYear}
+              <if test="periodType == 'MONTH'">
+                  AND stat_month = #{statMonth}
+              </if>
+              <if test="periodType == 'QUARTER'">
+                  AND stat_quarter = #{statQuarter}
+              </if>
+        ) t
+        ORDER BY sales_rank ASC, staff_id ASC
+        LIMIT #{topN}
+    </select>
+
+</mapper>

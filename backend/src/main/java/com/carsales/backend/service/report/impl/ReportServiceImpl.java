@@ -1,0 +1,47 @@
+package com.carsales.backend.service.report.impl;
+
+import com.carsales.backend.common.exception.BizException;
+import com.carsales.backend.mapper.report.ReportMapper;
+import com.carsales.backend.model.dto.report.SalesPerformanceRankingQueryDto;
+import com.carsales.backend.model.vo.report.SalesPerformanceRankingItemVo;
+import com.carsales.backend.service.report.ReportService;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class ReportServiceImpl implements ReportService {
+
+    private final ReportMapper reportMapper;
+
+    public ReportServiceImpl(ReportMapper reportMapper) {
+        this.reportMapper = reportMapper;
+    }
+
+    @Override
+    public List<SalesPerformanceRankingItemVo> querySalesPerformanceRanking(SalesPerformanceRankingQueryDto query) {
+        validatePeriodCondition(query);
+        return reportMapper.selectSalesPerformanceRanking(
+                query.getPeriodType(),
+                query.getStatYear(),
+                query.getStatQuarter(),
+                query.getStatMonth(),
+                query.getTopN()
+        );
+    }
+
+    private void validatePeriodCondition(SalesPerformanceRankingQueryDto query) {
+        if ("MONTH".equals(query.getPeriodType()) && query.getStatMonth() == null) {
+            throw new BizException(40011, "statMonth is required when periodType is MONTH");
+        }
+        if ("QUARTER".equals(query.getPeriodType()) && query.getStatQuarter() == null) {
+            throw new BizException(40012, "statQuarter is required when periodType is QUARTER");
+        }
+        if ("MONTH".equals(query.getPeriodType()) && query.getStatQuarter() != null) {
+            throw new BizException(40013, "statQuarter must be null when periodType is MONTH");
+        }
+        if ("QUARTER".equals(query.getPeriodType()) && query.getStatMonth() != null) {
+            throw new BizException(40014, "statMonth must be null when periodType is QUARTER");
+        }
+    }
+}
