@@ -1,9 +1,12 @@
 package com.carsales.backend.service.sales.impl;
 
 import com.carsales.backend.common.exception.BizException;
+import com.carsales.backend.mapper.sales.CustomerIntentMapper;
 import com.carsales.backend.mapper.sales.OrderMapper;
+import com.carsales.backend.model.dto.sales.CreateCustomerIntentRequest;
 import com.carsales.backend.model.dto.sales.CreateSalesOrderRequest;
 import com.carsales.backend.model.dto.sales.MyOrderQueryRequest;
+import com.carsales.backend.model.vo.sales.CreateCustomerIntentResponse;
 import com.carsales.backend.model.vo.sales.CreateSalesOrderResponse;
 import com.carsales.backend.model.vo.sales.MyOrderItemVo;
 import com.carsales.backend.model.vo.common.PageResult;
@@ -12,19 +15,26 @@ import com.carsales.backend.service.sales.OrderService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class OrderServiceImpl implements OrderService {
 
     private static final int MAX_PAGE_SIZE = 100;
+    private static final Set<String> ALLOWED_GENDERS = Set.of("M", "F", "OTHER");
+    private static final Set<String> ALLOWED_INTENT_LEVELS = Set.of("HIGH", "MEDIUM", "LOW");
 
     private final OrderMapper orderMapper;
+    private final CustomerIntentMapper customerIntentMapper;
 
-    public OrderServiceImpl(OrderMapper orderMapper) {
+    public OrderServiceImpl(OrderMapper orderMapper, CustomerIntentMapper customerIntentMapper) {
         this.orderMapper = orderMapper;
+        this.customerIntentMapper = customerIntentMapper;
     }
 
     @Override
@@ -110,5 +120,75 @@ public class OrderServiceImpl implements OrderService {
         );
 
         return new PageResult<>(total, pageNo, pageSize, records);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CreateCustomerIntentResponse createCustomerIntent(CreateCustomerIntentRequest request) {
+        validateIntentRequest(request);
+        validateModelAndStaff(request.getModelId(), request.getStaffId());
+
+        Integer customerId = customerIntentMapper.selectCustomerIdByPhone(request.getPhone());
+        if (customerId == null) {
+            Integer insertedCustomerId = customerIntentMapper.insertCustomerIfAbsent(
+                    request.getCustomerName(),
+                    request.getGender(),
+                    request.getPhone(),
+                    request.getIdCard(),
+                    request.getAddress(),
+                    request.getFirstVisitDate() == null ? LocalDate.now() : request.getFirstVisitDate(),
+                    request.getSourceChannel()
+            );
+            customerId = insertedCustomerId == null
+                    ? customerIntentMapper.selectCustomerIdByPhone(request.getPhone())
+                    : insertedCustomerId;
+        }
+
+        if (customerId == null) {
+            throw new BizException(50002, "Create customer intent failed: customer id not resolved");
+        }
+
+        Integer intentId = customerIntentMapper.insertCustomerIntent(
+                customerId,
+                request.getModelId(),
+                request.getIntentLevel(),
+                request.getRemark(),
+                request.getStaffId(),
+                request.getNextContactTime()
+        );
+
+        if (intentId == null) {
+            throw new BizException(50003, "Create customer intent failed: intent id not returned");
+        }
+
+        return new CreateCustomerIntentResponse(customerId, intentId);
+    }
+
+    private void validateIntentRequest(CreateCustomerIntentRequest request) {
+        if (request.getGender() != null && !ALLOWED_GENDERS.contains(request.getGender())) {
+            throw new BizException(40006, "gender must be one of M/F/OTHER");
+        }
+        if (!ALLOWED_INTENT_LEVELS.contains(request.getIntentLevel())) {
+            throw new BizException(40007, "intentLevel must be one of HIGH/MEDIUM/LOW");
+        }
+        LocalDateTime nextContactTime = request.getNextContactTime();
+        if (nextContactTime != null && nextContactTime.isBefore(LocalDateTime.now())) {
+            throw new BizException(40008, "nextContactTime cannot be earlier than now");
+        }
+
+        Integer customerIdByIdCard = customerIntentMapper.selectCustomerIdByIdCard(request.getIdCard());
+        Integer customerIdByPhone = customerIntentMapper.selectCustomerIdByPhone(request.getPhone());
+        if (customerIdByIdCard != null && customerIdByPhone != null && !customerIdByIdCard.equals(customerIdByPhone)) {
+            throw new BizException(40901, "phone and idCard belong to different customers");
+        }
+    }
+
+    private void validateModelAndStaff(Integer modelId, Integer staffId) {
+        if (customerIntentMapper.selectModelId(modelId) == null) {
+            throw new BizException(40402, "model not found: " + modelId);
+        }
+        if (customerIntentMapper.selectStaffId(staffId) == null) {
+            throw new BizException(40403, "staff not found: " + staffId);
+        }
     }
 }

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.carsales.backend.mapper.sales.CustomerIntentMapper">
+
+    <select id="selectCustomerIdByPhone" resultType="java.lang.Integer">
+        SELECT customer_id
+        FROM customer
+        WHERE phone = #{phone}
+        LIMIT 1
+    </select>
+
+    <select id="selectCustomerIdByIdCard" resultType="java.lang.Integer">
+        SELECT customer_id
+        FROM customer
+        WHERE id_card = #{idCard}
+        LIMIT 1
+    </select>
+
+    <select id="insertCustomerIfAbsent" resultType="java.lang.Integer">
+        INSERT INTO customer (
+            customer_name,
+            gender,
+            phone,
+            id_card,
+            address,
+            first_visit_date,
+            source_channel
+        ) VALUES (
+            #{customerName},
+            #{gender},
+            #{phone},
+            #{idCard},
+            #{address},
+            #{firstVisitDate},
+            #{sourceChannel}
+        )
+        ON CONFLICT (phone) DO NOTHING
+        RETURNING customer_id
+    </select>
+
+    <select id="selectModelId" resultType="java.lang.Integer">
+        SELECT model_id
+        FROM model
+        WHERE model_id = #{modelId}
+        LIMIT 1
+    </select>
+
+    <select id="selectStaffId" resultType="java.lang.Integer">
+        SELECT staff_id
+        FROM staff
+        WHERE staff_id = #{staffId}
+        LIMIT 1
+    </select>
+
+    <select id="insertCustomerIntent" resultType="java.lang.Integer">
+        INSERT INTO customer_intent (
+            customer_id,
+            model_id,
+            intent_level,
+            remark,
+            staff_id,
+            next_contact_time,
+            created_at
+        ) VALUES (
+            #{customerId},
+            #{modelId},
+            #{intentLevel},
+            #{remark},
+            #{staffId},
+            #{nextContactTime},
+            CURRENT_TIMESTAMP
+        )
+        RETURNING intent_id
+    </select>
+
+</mapper>

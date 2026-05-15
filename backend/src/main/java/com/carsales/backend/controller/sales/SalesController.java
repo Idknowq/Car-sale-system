@@ -1,8 +1,10 @@
 package com.carsales.backend.controller.sales;
 
 import com.carsales.backend.common.api.ApiResponse;
+import com.carsales.backend.model.dto.sales.CreateCustomerIntentRequest;
 import com.carsales.backend.model.dto.sales.CreateSalesOrderRequest;
 import com.carsales.backend.model.dto.sales.MyOrderQueryRequest;
+import com.carsales.backend.model.vo.sales.CreateCustomerIntentResponse;
 import com.carsales.backend.model.vo.sales.CreateSalesOrderResponse;
 import com.carsales.backend.model.vo.sales.MyOrderItemVo;
 import com.carsales.backend.model.vo.common.PageResult;
@@ -45,5 +47,12 @@ public class SalesController {
     @GetMapping("/orders/mine")
     public ApiResponse<PageResult<MyOrderItemVo>> queryMyOrders(@ModelAttribute MyOrderQueryRequest request) {
         return ApiResponse.ok(orderService.queryMyOrders(request));
+    }
+
+    @PostMapping("/intents")
+    public ApiResponse<CreateCustomerIntentResponse> createCustomerIntent(
+            @Valid @RequestBody CreateCustomerIntentRequest request
+    ) {
+        return ApiResponse.ok(orderService.createCustomerIntent(request));
     }
 }
