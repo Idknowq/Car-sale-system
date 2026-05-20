@@ -2,27 +2,207 @@
   <div class="module-page">
     <el-card shadow="never" class="section-card">
       <template #header>筛选区</template>
-      <div class="placeholder">Sales 模块在该区域放置查询/表单筛选组件。</div>
+      <el-form :inline="true" :model="queryForm" class="filter-form">
+        <el-form-item label="员工ID" required>
+          <el-input-number v-model="queryForm.staffId" :min="1" :step="1" controls-position="right" />
+        </el-form-item>
+        <el-form-item label="客户姓名">
+          <el-input v-model.trim="queryForm.customerName" placeholder="模糊匹配" clearable />
+        </el-form-item>
+        <el-form-item label="手机号">
+          <el-input v-model.trim="queryForm.phone" placeholder="精确匹配" clearable />
+        </el-form-item>
+        <el-form-item label="订单状态">
+          <el-select v-model="queryForm.orderStatus" clearable placeholder="全部">
+            <el-option label="LOCKED" value="LOCKED" />
+            <el-option label="DEPOSIT_PAID" value="DEPOSIT_PAID" />
+            <el-option label="COMPLETED" value="COMPLETED" />
+            <el-option label="CANCELLED" value="CANCELLED" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="VIN">
+          <el-input v-model.trim="queryForm.vehicleVin" clearable />
+        </el-form-item>
+        <el-form-item label="下单时间">
+          <el-date-picker
+            v-model="queryForm.createdAtRange"
+            type="datetimerange"
+            range-separator="-"
+            start-placeholder="开始"
+            end-placeholder="结束"
+            value-format="YYYY-MM-DD HH:mm:ss"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :loading="loading" @click="handleSearch">查询</el-button>
+          <el-button :disabled="loading" @click="handleReset">重置</el-button>
+          <el-button type="success" @click="intentDialogVisible = true">创建意向客户</el-button>
+        </el-form-item>
+      </el-form>
     </el-card>
 
     <el-card shadow="never" class="section-card">
       <template #header>表格区</template>
-      <div class="placeholder">Sales 模块在该区域放置列表或明细表格。</div>
+      <el-table :data="tableData" border stripe v-loading="loading" empty-text="暂无订单数据">
+        <el-table-column prop="orderId" label="订单ID" width="100" />
+        <el-table-column prop="customerId" label="客户ID" width="100" />
+        <el-table-column prop="customerName" label="客户姓名" min-width="120" />
+        <el-table-column prop="phone" label="手机号" min-width="130" />
+        <el-table-column prop="staffId" label="员工ID" width="100" />
+        <el-table-column prop="vehicleVin" label="VIN" min-width="180" />
+        <el-table-column prop="totalAmount" label="总金额" min-width="110" />
+        <el-table-column prop="depositAmount" label="定金" min-width="110" />
+        <el-table-column prop="orderStatus" label="状态" min-width="120" />
+        <el-table-column prop="createdAt" label="创建时间" min-width="180" />
+        <el-table-column prop="deliveryTime" label="交付时间" min-width="180" />
+      </el-table>
     </el-card>
 
     <el-card shadow="never" class="section-card">
       <template #header>分页区</template>
-      <div class="placeholder">Sales 模块在该区域放置分页器与统计信息。</div>
+      <div class="pager-row">
+        <div class="total-text">共 {{ total }} 条</div>
+        <el-pagination
+          background
+          layout="prev, pager, next, sizes"
+          :current-page="queryForm.pageNo"
+          :page-size="queryForm.pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          @current-change="handleCurrentChange"
+          @size-change="handleSizeChange"
+        />
+      </div>
     </el-card>
+
+    <CreateIntentDialog
+      v-model:visible="intentDialogVisible"
+      :submitting="intentSubmitting"
+      @submit="handleCreateIntent"
+    />
   </div>
 </template>
+
+<script setup>
+import { reactive, ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import CreateIntentDialog from '../../components/sales/CreateIntentDialog.vue'
+import { createCustomerIntent, queryMyOrders } from '../../api/sales'
+
+const loading = ref(false)
+const tableData = ref([])
+const total = ref(0)
+
+const createDefaultQuery = () => ({
+  staffId: null,
+  customerName: '',
+  phone: '',
+  orderStatus: '',
+  vehicleVin: '',
+  createdAtRange: [],
+  pageNo: 1,
+  pageSize: 10
+})
+
+const queryForm = reactive(createDefaultQuery())
+
+const intentDialogVisible = ref(false)
+const intentSubmitting = ref(false)
+
+const buildQueryParams = () => {
+  const params = {
+    staffId: queryForm.staffId,
+    customerName: queryForm.customerName || undefined,
+    phone: queryForm.phone || undefined,
+    orderStatus: queryForm.orderStatus || undefined,
+    vehicleVin: queryForm.vehicleVin || undefined,
+    pageNo: queryForm.pageNo,
+    pageSize: queryForm.pageSize
+  }
+  if (queryForm.createdAtRange?.length === 2) {
+    params.createdAtStart = queryForm.createdAtRange[0]
+    params.createdAtEnd = queryForm.createdAtRange[1]
+  }
+  return params
+}
+
+const loadOrders = async () => {
+  if (!queryForm.staffId) {
+    ElMessage.warning('请先输入员工ID后查询')
+    tableData.value = []
+    total.value = 0
+    return
+  }
+
+  loading.value = true
+  try {
+    const res = await queryMyOrders(buildQueryParams())
+    tableData.value = Array.isArray(res?.records) ? res.records : []
+    total.value = Number(res?.total || 0)
+  } catch {
+    tableData.value = []
+    total.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleSearch = () => {
+  queryForm.pageNo = 1
+  loadOrders()
+}
+
+const handleReset = () => {
+  Object.assign(queryForm, createDefaultQuery())
+  tableData.value = []
+  total.value = 0
+}
+
+const handleCurrentChange = (page) => {
+  queryForm.pageNo = page
+  loadOrders()
+}
+
+const handleSizeChange = (size) => {
+  queryForm.pageSize = size
+  queryForm.pageNo = 1
+  loadOrders()
+}
+
+const handleCreateIntent = async (payload) => {
+  intentSubmitting.value = true
+  try {
+    const res = await createCustomerIntent(payload)
+    ElMessage.success(`创建成功：customerId=${res.customerId}, intentId=${res.intentId}`)
+    intentDialogVisible.value = false
+  } finally {
+    intentSubmitting.value = false
+  }
+}
+
+onMounted(() => {
+  // 首次进入不自动查，避免 staffId 为空触发后端必填报错
+})
+</script>
 
 <style scoped>
 .section-card {
   margin-bottom: 16px;
 }
 
-.placeholder {
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.pager-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.total-text {
   color: #606266;
 }
 </style>
