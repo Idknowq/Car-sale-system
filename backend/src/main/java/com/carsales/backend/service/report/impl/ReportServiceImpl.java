@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,21 +74,13 @@ public class ReportServiceImpl implements ReportService {
                     callableStatement.setInt(2, month);
                     callableStatement.setString(3, cursorName);
 
-                    boolean hasResultSet = callableStatement.execute();
-                    if (hasResultSet) {
-                        try (ResultSet rs = callableStatement.getResultSet()) {
-                            while (rs.next()) {
-                                result.add(mapMonthlySalesRow(rs));
-                            }
-                        }
-                    } else {
-                        String fetchSql = "FETCH ALL FROM " + cursorName;
-                        try (ResultSet rs = callableStatement.getConnection()
-                                .createStatement()
-                                .executeQuery(fetchSql)) {
-                            while (rs.next()) {
-                                result.add(mapMonthlySalesRow(rs));
-                            }
+                    callableStatement.execute();
+
+                    String fetchSql = "FETCH ALL FROM " + cursorName;
+                    try (Statement statement = connection.createStatement();
+                         ResultSet rs = statement.executeQuery(fetchSql)) {
+                        while (rs.next()) {
+                            result.add(mapMonthlySalesRow(rs));
                         }
                     }
                 }
