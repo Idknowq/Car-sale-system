@@ -29,5 +29,7 @@ public interface InventoryMapper {
                                @Param("staffId") Integer staffId,
                                @Param("reason") String reason);
 
+    int countStaffById(@Param("staffId") Integer staffId);
+
     List<InventoryAlertVo> queryInventoryAlerts(@Param("query") InventoryAlertQueryDto query);
 }

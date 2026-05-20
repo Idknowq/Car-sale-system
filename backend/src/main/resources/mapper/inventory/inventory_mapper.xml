@@ -119,6 +119,12 @@
             (#{vehicleVin}, 'IN_TRANSIT', 'IN_INVENTORY', CURRENT_TIMESTAMP, #{staffId}, #{reason})
     </insert>
 
+    <select id="countStaffById" resultType="int">
+        SELECT COUNT(1)
+        FROM staff
+        WHERE staff_id = #{staffId}
+    </select>
+
     <select id="queryInventoryAlerts" resultType="com.carsales.backend.model.vo.inventory.InventoryAlertVo">
         SELECT
             inv.model_id,

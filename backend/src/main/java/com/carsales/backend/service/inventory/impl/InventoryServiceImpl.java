@@ -49,6 +49,7 @@ public class InventoryServiceImpl implements InventoryService {
         String vehicleVin = request.getVehicleVin().trim();
         LocalDate inboundDate = request.getInventoryInDate() == null ? LocalDate.now() : request.getInventoryInDate();
         String reason = normalizeReason(request.getReason());
+        Integer staffId = request.getStaffId();
 
         InventoryVehicleInboundCheckVo vehicle = inventoryMapper.selectInboundCheckByVin(vehicleVin);
         if (vehicle == null) {
@@ -64,12 +65,16 @@ public class InventoryServiceImpl implements InventoryService {
             throw new BizException(40012, "inventoryInDate cannot be earlier than manufactureDate");
         }
 
+        if (inventoryMapper.countStaffById(staffId) == 0) {
+            throw new BizException(40013, "Staff not found: " + staffId);
+        }
+
         int updated = inventoryMapper.updateVehicleInbound(vehicleVin, inboundDate);
         if (updated == 0) {
             throw new BizException(40911, "Vehicle inbound failed due to status change, please retry");
         }
 
-        inventoryMapper.insertVehicleStatusLog(vehicleVin, request.getStaffId(), reason);
+        inventoryMapper.insertVehicleStatusLog(vehicleVin, staffId, reason);
 
         return new VehicleInboundResponse(vehicleVin, STATUS_IN_TRANSIT, STATUS_IN_INVENTORY, inboundDate);
     }
