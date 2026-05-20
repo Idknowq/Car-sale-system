@@ -1,10 +1,10 @@
 package com.carsales.backend.model.dto.sales;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,7 +30,7 @@ public class CreateCustomerIntentRequest {
     @Size(max = 200)
     private String address;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate firstVisitDate;
 
     @Size(max = 30)
@@ -49,7 +49,7 @@ public class CreateCustomerIntentRequest {
     @NotNull
     private Integer staffId;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime nextContactTime;
 
     public String getCustomerName() {

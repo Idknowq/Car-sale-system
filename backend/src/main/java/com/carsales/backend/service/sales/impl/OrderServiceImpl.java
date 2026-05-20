@@ -12,6 +12,7 @@ import com.carsales.backend.model.vo.sales.MyOrderItemVo;
 import com.carsales.backend.model.vo.common.PageResult;
 import com.carsales.backend.model.vo.sales.SalesOrderVo;
 import com.carsales.backend.service.sales.OrderService;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -129,19 +131,29 @@ public class OrderServiceImpl implements OrderService {
         validateModelAndStaff(request.getModelId(), request.getStaffId());
 
         Integer customerId = customerIntentMapper.selectCustomerIdByPhone(request.getPhone());
-        if (customerId == null) {
-            Integer insertedCustomerId = customerIntentMapper.insertCustomerIfAbsent(
-                    request.getCustomerName(),
-                    request.getGender(),
-                    request.getPhone(),
-                    request.getIdCard(),
-                    request.getAddress(),
-                    request.getFirstVisitDate() == null ? LocalDate.now() : request.getFirstVisitDate(),
-                    request.getSourceChannel()
-            );
+        if (customerId != null) {
+            validateExistingCustomerConsistency(customerId, request);
+        } else {
+            Integer insertedCustomerId;
+            try {
+                insertedCustomerId = customerIntentMapper.insertCustomerIfAbsent(
+                        request.getCustomerName(),
+                        request.getGender(),
+                        request.getPhone(),
+                        request.getIdCard(),
+                        request.getAddress(),
+                        request.getFirstVisitDate() == null ? LocalDate.now() : request.getFirstVisitDate(),
+                        request.getSourceChannel()
+                );
+            } catch (DuplicateKeyException ex) {
+                throw new BizException(40902, "idCard already exists");
+            }
             customerId = insertedCustomerId == null
                     ? customerIntentMapper.selectCustomerIdByPhone(request.getPhone())
                     : insertedCustomerId;
+            if (customerId != null) {
+                validateExistingCustomerConsistency(customerId, request);
+            }
         }
 
         if (customerId == null) {
@@ -180,6 +192,22 @@ public class OrderServiceImpl implements OrderService {
         Integer customerIdByPhone = customerIntentMapper.selectCustomerIdByPhone(request.getPhone());
         if (customerIdByIdCard != null && customerIdByPhone != null && !customerIdByIdCard.equals(customerIdByPhone)) {
             throw new BizException(40901, "phone and idCard belong to different customers");
+        }
+    }
+
+    private void validateExistingCustomerConsistency(Integer customerId, CreateCustomerIntentRequest request) {
+        CustomerIntentMapper.ExistingCustomerSnapshot snapshot = customerIntentMapper.selectCustomerSnapshotById(customerId);
+        if (snapshot == null) {
+            throw new BizException(50004, "customer not found while checking consistency: " + customerId);
+        }
+        if (!Objects.equals(snapshot.getIdCard(), request.getIdCard())) {
+            throw new BizException(40901, "phone and idCard belong to different customers");
+        }
+        if (!Objects.equals(snapshot.getCustomerName(), request.getCustomerName())
+                || !Objects.equals(snapshot.getGender(), request.getGender())
+                || !Objects.equals(snapshot.getAddress(), request.getAddress())
+                || !Objects.equals(snapshot.getSourceChannel(), request.getSourceChannel())) {
+            throw new BizException(40903, "customer profile mismatch for existing phone");
         }
     }
 

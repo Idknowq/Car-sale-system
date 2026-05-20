@@ -18,6 +18,18 @@
         LIMIT 1
     </select>
 
+    <select id="selectCustomerSnapshotById" resultType="com.carsales.backend.mapper.sales.CustomerIntentMapper$ExistingCustomerSnapshot">
+        SELECT
+            id_card,
+            customer_name,
+            gender,
+            address,
+            source_channel
+        FROM customer
+        WHERE customer_id = #{customerId}
+        LIMIT 1
+    </select>
+
     <select id="insertCustomerIfAbsent" resultType="java.lang.Integer">
         INSERT INTO customer (
             customer_name,

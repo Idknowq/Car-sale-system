@@ -13,6 +13,8 @@ public interface CustomerIntentMapper {
 
     Integer selectCustomerIdByIdCard(@Param("idCard") String idCard);
 
+    ExistingCustomerSnapshot selectCustomerSnapshotById(@Param("customerId") Integer customerId);
+
     Integer insertCustomerIfAbsent(
             @Param("customerName") String customerName,
             @Param("gender") String gender,
@@ -35,4 +37,52 @@ public interface CustomerIntentMapper {
             @Param("staffId") Integer staffId,
             @Param("nextContactTime") LocalDateTime nextContactTime
     );
+
+    class ExistingCustomerSnapshot {
+        private String idCard;
+        private String customerName;
+        private String gender;
+        private String address;
+        private String sourceChannel;
+
+        public String getIdCard() {
+            return idCard;
+        }
+
+        public void setIdCard(String idCard) {
+            this.idCard = idCard;
+        }
+
+        public String getCustomerName() {
+            return customerName;
+        }
+
+        public void setCustomerName(String customerName) {
+            this.customerName = customerName;
+        }
+
+        public String getGender() {
+            return gender;
+        }
+
+        public void setGender(String gender) {
+            this.gender = gender;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
+        }
+
+        public String getSourceChannel() {
+            return sourceChannel;
+        }
+
+        public void setSourceChannel(String sourceChannel) {
+            this.sourceChannel = sourceChannel;
+        }
+    }
 }
