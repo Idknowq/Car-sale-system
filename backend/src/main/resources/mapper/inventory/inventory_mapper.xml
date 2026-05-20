@@ -94,4 +94,63 @@
         SELECT COUNT(1)
         <include refid="BaseFromAndWhere"/>
     </select>
+
+    <select id="selectInboundCheckByVin" resultType="com.carsales.backend.model.vo.inventory.InventoryVehicleInboundCheckVo">
+        SELECT
+            vehicle_vin,
+            current_status,
+            manufacture_date
+        FROM vehicle
+        WHERE vehicle_vin = #{vehicleVin}
+    </select>
+
+    <update id="updateVehicleInbound">
+        UPDATE vehicle
+        SET current_status = 'IN_INVENTORY',
+            inventory_in_date = #{inventoryInDate}
+        WHERE vehicle_vin = #{vehicleVin}
+          AND current_status = 'IN_TRANSIT'
+    </update>
+
+    <insert id="insertVehicleStatusLog">
+        INSERT INTO vehicle_status_log
+            (vehicle_vin, from_status, to_status, changed_at, staff_id, reason)
+        VALUES
+            (#{vehicleVin}, 'IN_TRANSIT', 'IN_INVENTORY', CURRENT_TIMESTAMP, #{staffId}, #{reason})
+    </insert>
+
+    <select id="countStaffById" resultType="int">
+        SELECT COUNT(1)
+        FROM staff
+        WHERE staff_id = #{staffId}
+    </select>
+
+    <select id="queryInventoryAlerts" resultType="com.carsales.backend.model.vo.inventory.InventoryAlertVo">
+        SELECT
+            inv.model_id,
+            m.brand_id,
+            inv.brand_name,
+            inv.model_name,
+            inv.model_year,
+            inv.trim_name,
+            m.safety_stock_threshold,
+            inv.in_inventory_count,
+            inv.locked_count,
+            inv.in_transit_count,
+            (m.safety_stock_threshold - inv.in_inventory_count) AS shortage_count
+        FROM v_inventory_summary inv
+        JOIN model m ON m.model_id = inv.model_id
+        <where>
+            <if test="query.onlyPositiveShortage == null or query.onlyPositiveShortage">
+                (m.safety_stock_threshold - inv.in_inventory_count) &gt; 0
+            </if>
+            <if test="query.brandId != null">
+                AND m.brand_id = #{query.brandId}
+            </if>
+            <if test="query.modelId != null">
+                AND inv.model_id = #{query.modelId}
+            </if>
+        </where>
+        ORDER BY shortage_count DESC, inv.brand_name, inv.model_name
+    </select>
 </mapper>
