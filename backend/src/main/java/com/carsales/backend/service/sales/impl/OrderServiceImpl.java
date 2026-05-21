@@ -214,13 +214,13 @@ public class OrderServiceImpl implements OrderService {
         if (snapshot == null) {
             throw new BizException(50004, "customer not found while checking consistency: " + customerId);
         }
-        if (!Objects.equals(snapshot.getIdCard(), request.getIdCard())) {
+        if (!Objects.equals(normalizeText(snapshot.getIdCard()), normalizeText(request.getIdCard()))) {
             throw new BizException(40901, "phone and idCard belong to different customers");
         }
-        if (!Objects.equals(snapshot.getCustomerName(), request.getCustomerName())
-                || !Objects.equals(snapshot.getGender(), request.getGender())
-                || !Objects.equals(snapshot.getAddress(), request.getAddress())
-                || !Objects.equals(snapshot.getSourceChannel(), request.getSourceChannel())) {
+        if (!Objects.equals(normalizeText(snapshot.getCustomerName()), normalizeText(request.getCustomerName()))
+                || !Objects.equals(normalizeText(snapshot.getGender()), normalizeText(request.getGender()))
+                || !Objects.equals(normalizeText(snapshot.getAddress()), normalizeText(request.getAddress()))
+                || !Objects.equals(normalizeText(snapshot.getSourceChannel()), normalizeText(request.getSourceChannel()))) {
             throw new BizException(40903, "customer profile mismatch for existing phone");
         }
     }
@@ -241,5 +241,13 @@ public class OrderServiceImpl implements OrderService {
         }
         return message.contains("uk_sales_order_vehicle_vin")
                 || message.contains("duplicate key value violates unique constraint");
+    }
+
+    private String normalizeText(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 }
