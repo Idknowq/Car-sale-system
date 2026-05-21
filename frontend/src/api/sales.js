@@ -6,4 +6,6 @@ export const queryMyOrders = (params) => request.get('/api/sales/orders/mine', {
 
 export const getOrderById = (orderId) => request.get(`/api/sales/orders/${orderId}`)
 
+export const createSalesOrder = (data) => request.post('/api/sales/orders', data)
+
 export const createCustomerIntent = (data) => request.post('/api/sales/intents', data)

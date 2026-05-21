@@ -36,6 +36,7 @@
         <el-form-item>
           <el-button type="primary" :loading="loading" @click="handleSearch">查询</el-button>
           <el-button :disabled="loading" @click="handleReset">重置</el-button>
+          <el-button type="warning" @click="orderDialogVisible = true">创建销售订单</el-button>
           <el-button type="success" @click="intentDialogVisible = true">创建意向客户</el-button>
         </el-form-item>
       </el-form>
@@ -50,11 +51,11 @@
         <el-table-column prop="phone" label="手机号" min-width="130" />
         <el-table-column prop="staffId" label="员工ID" width="100" />
         <el-table-column prop="vehicleVin" label="VIN" min-width="180" />
-        <el-table-column prop="totalAmount" label="总金额" min-width="110" />
-        <el-table-column prop="depositAmount" label="定金" min-width="110" />
-        <el-table-column prop="orderStatus" label="状态" min-width="120" />
-        <el-table-column prop="createdAt" label="创建时间" min-width="180" />
-        <el-table-column prop="deliveryTime" label="交付时间" min-width="180" />
+        <el-table-column prop="totalAmount" label="总金额" min-width="110" :formatter="formatMoneyCell" />
+        <el-table-column prop="depositAmount" label="定金" min-width="110" :formatter="formatMoneyCell" />
+        <el-table-column prop="orderStatus" label="状态" min-width="120" :formatter="formatOrderStatusCell" />
+        <el-table-column prop="createdAt" label="创建时间" min-width="180" :formatter="formatDateTimeCell" />
+        <el-table-column prop="deliveryTime" label="交付时间" min-width="180" :formatter="formatDateTimeCell" />
       </el-table>
     </el-card>
 
@@ -75,6 +76,12 @@
       </div>
     </el-card>
 
+    <CreateOrderDialog
+      v-model:visible="orderDialogVisible"
+      :submitting="orderSubmitting"
+      @submit="handleCreateOrder"
+    />
+
     <CreateIntentDialog
       v-model:visible="intentDialogVisible"
       :submitting="intentSubmitting"
@@ -84,10 +91,12 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import CreateIntentDialog from '../../components/sales/CreateIntentDialog.vue'
-import { createCustomerIntent, queryMyOrders } from '../../api/sales'
+import CreateOrderDialog from '../../components/sales/CreateOrderDialog.vue'
+import { createCustomerIntent, createSalesOrder, queryMyOrders } from '../../api/sales'
+import { formatDateTime, formatMoney, formatOrderStatus } from '../../utils/format'
 
 const loading = ref(false)
 const tableData = ref([])
@@ -106,6 +115,8 @@ const createDefaultQuery = () => ({
 
 const queryForm = reactive(createDefaultQuery())
 
+const orderDialogVisible = ref(false)
+const orderSubmitting = ref(false)
 const intentDialogVisible = ref(false)
 const intentSubmitting = ref(false)
 
@@ -169,6 +180,20 @@ const handleSizeChange = (size) => {
   loadOrders()
 }
 
+const handleCreateOrder = async (payload) => {
+  orderSubmitting.value = true
+  try {
+    const res = await createSalesOrder(payload)
+    ElMessage.success(`订单创建成功：orderId=${res.orderId}`)
+    orderDialogVisible.value = false
+    queryForm.staffId = payload.staffId
+    queryForm.pageNo = 1
+    await loadOrders()
+  } finally {
+    orderSubmitting.value = false
+  }
+}
+
 const handleCreateIntent = async (payload) => {
   intentSubmitting.value = true
   try {
@@ -180,9 +205,11 @@ const handleCreateIntent = async (payload) => {
   }
 }
 
-onMounted(() => {
-  // 首次进入不自动查，避免 staffId 为空触发后端必填报错
-})
+const formatMoneyCell = (_row, _column, cellValue) => formatMoney(cellValue)
+
+const formatDateTimeCell = (_row, _column, cellValue) => formatDateTime(cellValue)
+
+const formatOrderStatusCell = (_row, _column, cellValue) => formatOrderStatus(cellValue)
 </script>
 
 <style scoped>
