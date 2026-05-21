@@ -5,9 +5,11 @@ import com.carsales.backend.mapper.sales.CustomerIntentMapper;
 import com.carsales.backend.mapper.sales.OrderMapper;
 import com.carsales.backend.model.dto.sales.CreateCustomerIntentRequest;
 import com.carsales.backend.model.dto.sales.CreateSalesOrderRequest;
+import com.carsales.backend.model.dto.sales.CompleteSalesOrderRequest;
 import com.carsales.backend.model.dto.sales.MyOrderQueryRequest;
 import com.carsales.backend.model.vo.sales.CreateCustomerIntentResponse;
 import com.carsales.backend.model.vo.sales.CreateSalesOrderResponse;
+import com.carsales.backend.model.vo.sales.CompleteSalesOrderResponse;
 import com.carsales.backend.model.vo.sales.MyOrderItemVo;
 import com.carsales.backend.model.vo.common.PageResult;
 import com.carsales.backend.model.vo.sales.SalesOrderVo;
@@ -190,6 +192,43 @@ public class OrderServiceImpl implements OrderService {
         return new CreateCustomerIntentResponse(customerId, intentId);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CompleteSalesOrderResponse completeSalesOrder(Integer orderId, CompleteSalesOrderRequest request) {
+        SalesOrderVo order = orderMapper.selectOrderById(orderId);
+        if (order == null) {
+            throw new BizException(40401, "Order not found: " + orderId);
+        }
+        if (!Objects.equals(order.getStaffId(), request.getStaffId())) {
+            throw new BizException(40921, "staffId does not match order owner");
+        }
+
+        String status = order.getOrderStatus();
+        if ("COMPLETED".equals(status)) {
+            return new CompleteSalesOrderResponse(orderId, "COMPLETED");
+        }
+        if ("CANCELLED".equals(status)) {
+            throw new BizException(40922, "Cancelled order cannot be completed: " + orderId);
+        }
+        if (!"LOCKED".equals(status) && !"DEPOSIT_PAID".equals(status)) {
+            throw new BizException(40923, "Current order status cannot be completed: " + status);
+        }
+
+        try {
+            int affected = orderMapper.updateOrderStatusToCompleted(orderId);
+            if (affected <= 0) {
+                throw new BizException(50006, "Complete order failed: no row updated");
+            }
+        } catch (Exception ex) {
+            if (isDeliveryTriggerConflict(ex)) {
+                throw new BizException(40924, "Complete order failed: vehicle status is not LOCKED");
+            }
+            throw new BizException(40006, "Complete order failed: " + ex.getMessage());
+        }
+
+        return new CompleteSalesOrderResponse(orderId, "COMPLETED");
+    }
+
     private void validateIntentRequest(CreateCustomerIntentRequest request) {
         if (request.getGender() != null && !ALLOWED_GENDERS.contains(request.getGender())) {
             throw new BizException(40006, "gender must be one of M/F/OTHER");
@@ -241,6 +280,15 @@ public class OrderServiceImpl implements OrderService {
         }
         return message.contains("uk_sales_order_vehicle_vin")
                 || message.contains("duplicate key value violates unique constraint");
+    }
+
+    private boolean isDeliveryTriggerConflict(Exception ex) {
+        String message = ex.getMessage();
+        if (message == null) {
+            return false;
+        }
+        return message.contains("cannot mark SOLD for order")
+                || message.contains("is not in LOCKED status");
     }
 
     private String normalizeText(String value) {

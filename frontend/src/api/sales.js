@@ -8,4 +8,6 @@ export const getOrderById = (orderId) => request.get(`/api/sales/orders/${orderI
 
 export const createSalesOrder = (data) => request.post('/api/sales/orders', data)
 
+export const completeSalesOrder = (orderId, data) => request.post(`/api/sales/orders/${orderId}/complete`, data)
+
 export const createCustomerIntent = (data) => request.post('/api/sales/intents', data)

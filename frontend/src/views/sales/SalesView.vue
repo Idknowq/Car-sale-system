@@ -56,6 +56,18 @@
         <el-table-column prop="orderStatus" label="状态" min-width="120" :formatter="formatOrderStatusCell" />
         <el-table-column prop="createdAt" label="创建时间" min-width="180" :formatter="formatDateTimeCell" />
         <el-table-column prop="deliveryTime" label="交付时间" min-width="180" :formatter="formatDateTimeCell" />
+        <el-table-column label="操作" width="140" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              type="primary"
+              link
+              :disabled="!canComplete(row) || completeSubmitting"
+              @click="handleCompleteOrder(row)"
+            >
+              完成订单
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-card>
 
@@ -92,10 +104,10 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import CreateIntentDialog from '../../components/sales/CreateIntentDialog.vue'
 import CreateOrderDialog from '../../components/sales/CreateOrderDialog.vue'
-import { createCustomerIntent, createSalesOrder, queryMyOrders } from '../../api/sales'
+import { completeSalesOrder, createCustomerIntent, createSalesOrder, queryMyOrders } from '../../api/sales'
 import { formatDateTime, formatMoney, formatOrderStatus } from '../../utils/format'
 
 const loading = ref(false)
@@ -117,6 +129,7 @@ const queryForm = reactive(createDefaultQuery())
 
 const orderDialogVisible = ref(false)
 const orderSubmitting = ref(false)
+const completeSubmitting = ref(false)
 const intentDialogVisible = ref(false)
 const intentSubmitting = ref(false)
 
@@ -202,6 +215,35 @@ const handleCreateIntent = async (payload) => {
     intentDialogVisible.value = false
   } finally {
     intentSubmitting.value = false
+  }
+}
+
+const canComplete = (row) => row?.orderStatus === 'LOCKED' || row?.orderStatus === 'DEPOSIT_PAID'
+
+const handleCompleteOrder = async (row) => {
+  if (!queryForm.staffId) {
+    ElMessage.warning('请先输入员工ID')
+    return
+  }
+  if (!canComplete(row)) return
+
+  try {
+    await ElMessageBox.confirm(
+      `确认将订单 ${row.orderId} 更新为已完成吗？`,
+      '完成订单确认',
+      { type: 'warning' }
+    )
+  } catch {
+    return
+  }
+
+  completeSubmitting.value = true
+  try {
+    await completeSalesOrder(row.orderId, { staffId: queryForm.staffId })
+    ElMessage.success(`订单 ${row.orderId} 已完成`)
+    await loadOrders()
+  } finally {
+    completeSubmitting.value = false
   }
 }
 

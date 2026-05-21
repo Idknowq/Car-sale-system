@@ -15,6 +15,8 @@ public interface OrderMapper {
 
     SalesOrderVo selectOrderById(@Param("orderId") Integer orderId);
 
+    int updateOrderStatusToCompleted(@Param("orderId") Integer orderId);
+
     List<MyOrderItemVo> selectMyOrders(
             @Param("staffId") Integer staffId,
             @Param("customerId") Integer customerId,

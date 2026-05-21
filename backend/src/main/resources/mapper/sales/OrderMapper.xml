@@ -59,6 +59,12 @@
         WHERE order_id = #{orderId}
     </select>
 
+    <update id="updateOrderStatusToCompleted">
+        UPDATE sales_order
+        SET order_status = 'COMPLETED'
+        WHERE order_id = #{orderId}
+    </update>
+
     <select id="selectMyOrders" resultType="com.carsales.backend.model.vo.sales.MyOrderItemVo">
         SELECT
             so.order_id,

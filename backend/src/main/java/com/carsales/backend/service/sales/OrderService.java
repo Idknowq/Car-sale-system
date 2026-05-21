@@ -2,9 +2,11 @@ package com.carsales.backend.service.sales;
 
 import com.carsales.backend.model.dto.sales.CreateCustomerIntentRequest;
 import com.carsales.backend.model.dto.sales.CreateSalesOrderRequest;
+import com.carsales.backend.model.dto.sales.CompleteSalesOrderRequest;
 import com.carsales.backend.model.dto.sales.MyOrderQueryRequest;
 import com.carsales.backend.model.vo.sales.CreateCustomerIntentResponse;
 import com.carsales.backend.model.vo.sales.CreateSalesOrderResponse;
+import com.carsales.backend.model.vo.sales.CompleteSalesOrderResponse;
 import com.carsales.backend.model.vo.sales.MyOrderItemVo;
 import com.carsales.backend.model.vo.common.PageResult;
 import com.carsales.backend.model.vo.sales.SalesOrderVo;
@@ -17,4 +19,6 @@ public interface OrderService {
     PageResult<MyOrderItemVo> queryMyOrders(MyOrderQueryRequest request);
 
     CreateCustomerIntentResponse createCustomerIntent(CreateCustomerIntentRequest request);
+
+    CompleteSalesOrderResponse completeSalesOrder(Integer orderId, CompleteSalesOrderRequest request);
 }
