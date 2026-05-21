@@ -71,7 +71,7 @@ SELECT
     m.trim_name,
     v.inventory_in_date,
     so.delivery_time,
-    (so.delivery_time::DATE - v.inventory_in_date)::INT AS inventory_days
+    EXTRACT(DAY FROM (so.delivery_time - v.inventory_in_date::TIMESTAMP))::INT AS inventory_days
 FROM sales_order so
 JOIN vehicle v ON v.vehicle_vin = so.vehicle_vin
 JOIN model m ON m.model_id = v.model_id
@@ -79,7 +79,7 @@ JOIN brand b ON b.brand_id = m.brand_id
 WHERE so.order_status = 'COMPLETED'
   AND v.inventory_in_date IS NOT NULL
   AND so.delivery_time IS NOT NULL
-  AND (so.delivery_time::DATE - v.inventory_in_date) > 90
+  AND EXTRACT(DAY FROM (so.delivery_time - v.inventory_in_date::TIMESTAMP)) > 90
 ORDER BY inventory_days DESC, so.delivery_time;
 
 -- ==========================================================
