@@ -6,19 +6,29 @@
       <el-table-column prop="staffId" label="员工ID" width="100" />
       <el-table-column prop="staffName" label="员工姓名" min-width="140" />
       <el-table-column prop="orderCount" label="订单数" width="100" />
-      <el-table-column prop="salesAmount" label="销售额" min-width="140" />
-      <el-table-column prop="grossProfit" label="毛利" min-width="140" />
+      <el-table-column prop="salesAmount" label="销售额" min-width="140">
+        <template #default="{ row }">{{ formatMoney(row.salesAmount) }}</template>
+      </el-table-column>
+      <el-table-column prop="grossProfit" label="毛利" min-width="140">
+        <template #default="{ row }">{{ formatMoney(row.grossProfit) }}</template>
+      </el-table-column>
     </template>
 
     <template v-else-if="reportType === 'performance'">
       <el-table-column prop="salesRank" label="排名" width="90" />
-      <el-table-column prop="periodLabel" label="统计周期" min-width="140" />
+      <el-table-column prop="periodLabel" label="统计周期" min-width="140">
+        <template #default="{ row }">{{ row.periodLabel || '-' }}</template>
+      </el-table-column>
       <el-table-column prop="staffId" label="员工ID" width="100" />
       <el-table-column prop="staffNo" label="员工工号" min-width="120" />
       <el-table-column prop="staffName" label="员工姓名" min-width="140" />
       <el-table-column prop="orderCount" label="订单数" width="100" />
-      <el-table-column prop="salesAmount" label="销售额" min-width="140" />
-      <el-table-column prop="grossProfit" label="毛利" min-width="140" />
+      <el-table-column prop="salesAmount" label="销售额" min-width="140">
+        <template #default="{ row }">{{ formatMoney(row.salesAmount) }}</template>
+      </el-table-column>
+      <el-table-column prop="grossProfit" label="毛利" min-width="140">
+        <template #default="{ row }">{{ formatMoney(row.grossProfit) }}</template>
+      </el-table-column>
     </template>
 
     <template v-else>
@@ -27,12 +37,16 @@
       <el-table-column prop="modelYear" label="年款" width="100" />
       <el-table-column prop="trimName" label="配置" min-width="140" />
       <el-table-column prop="salesVolume" label="销量" width="100" />
-      <el-table-column prop="salesAmount" label="销售额" min-width="140" />
+      <el-table-column prop="salesAmount" label="销售额" min-width="140">
+        <template #default="{ row }">{{ formatMoney(row.salesAmount) }}</template>
+      </el-table-column>
     </template>
   </el-table>
 </template>
 
 <script setup>
+import { formatMoney } from '../../utils/format'
+
 defineProps({
   reportType: {
     type: String,
