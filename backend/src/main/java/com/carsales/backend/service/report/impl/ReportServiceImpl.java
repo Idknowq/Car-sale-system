@@ -9,25 +9,17 @@ import com.carsales.backend.model.vo.report.BestSellingModelRankingItemVo;
 import com.carsales.backend.model.vo.report.MonthlySalesReportItemVo;
 import com.carsales.backend.model.vo.report.SalesPerformanceRankingItemVo;
 import com.carsales.backend.service.report.ReportService;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class ReportServiceImpl implements ReportService {
 
     private final ReportMapper reportMapper;
-    private final JdbcTemplate jdbcTemplate;
 
-    public ReportServiceImpl(ReportMapper reportMapper, JdbcTemplate jdbcTemplate) {
+    public ReportServiceImpl(ReportMapper reportMapper) {
         this.reportMapper = reportMapper;
-        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -52,7 +44,6 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<MonthlySalesReportItemVo> queryMonthlySalesReport(MonthlySalesReportQueryDto query) {
         Integer year = query.getYear();
         Integer month = query.getMonth();
@@ -63,44 +54,11 @@ public class ReportServiceImpl implements ReportService {
             throw new BizException(40032, "month must be between 1 and 12");
         }
 
-        String cursorName = "cur_monthly_report";
-
         try {
-            return jdbcTemplate.execute((org.springframework.jdbc.core.ConnectionCallback<java.util.List<com.carsales.backend.model.vo.report.MonthlySalesReportItemVo>>) connection -> {
-                List<MonthlySalesReportItemVo> result = new ArrayList<>();
-                String callSql = "{call sp_get_monthly_report(?, ?, ?)}";
-                try (CallableStatement callableStatement = connection.prepareCall(callSql)) {
-                    callableStatement.setInt(1, year);
-                    callableStatement.setInt(2, month);
-                    callableStatement.setString(3, cursorName);
-
-                    callableStatement.execute();
-
-                    String fetchSql = "FETCH ALL FROM " + cursorName;
-                    try (Statement statement = connection.createStatement();
-                         ResultSet rs = statement.executeQuery(fetchSql)) {
-                        while (rs.next()) {
-                            result.add(mapMonthlySalesRow(rs));
-                        }
-                    }
-                }
-                return result;
-            });
+            return reportMapper.selectMonthlySalesReport(year, month);
         } catch (Exception ex) {
             throw new BizException(50031, "Query monthly sales report failed: " + ex.getMessage());
         }
-    }
-
-    private MonthlySalesReportItemVo mapMonthlySalesRow(ResultSet rs) throws java.sql.SQLException {
-        MonthlySalesReportItemVo item = new MonthlySalesReportItemVo();
-        item.setStatYear(rs.getInt("stat_year"));
-        item.setStatMonth(rs.getInt("stat_month"));
-        item.setStaffId(rs.getInt("staff_id"));
-        item.setStaffName(rs.getString("staff_name"));
-        item.setOrderCount(rs.getInt("order_count"));
-        item.setSalesAmount(rs.getBigDecimal("sales_amount"));
-        item.setGrossProfit(rs.getBigDecimal("gross_profit"));
-        return item;
     }
 
     private void validatePeriodCondition(SalesPerformanceRankingQueryDto query) {

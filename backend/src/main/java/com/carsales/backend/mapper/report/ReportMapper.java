@@ -1,6 +1,7 @@
 package com.carsales.backend.mapper.report;
 
 import com.carsales.backend.model.vo.report.BestSellingModelRankingItemVo;
+import com.carsales.backend.model.vo.report.MonthlySalesReportItemVo;
 import com.carsales.backend.model.vo.report.SalesPerformanceRankingItemVo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -18,4 +19,9 @@ public interface ReportMapper {
     );
 
     List<BestSellingModelRankingItemVo> selectBestSellingModels(@Param("topN") Integer topN);
+
+    List<MonthlySalesReportItemVo> selectMonthlySalesReport(
+            @Param("year") Integer year,
+            @Param("month") Integer month
+    );
 }
