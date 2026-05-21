@@ -48,7 +48,6 @@
             #{firstVisitDate},
             #{sourceChannel}
         )
-        ON CONFLICT (phone) DO NOTHING
         RETURNING customer_id
     </select>
 

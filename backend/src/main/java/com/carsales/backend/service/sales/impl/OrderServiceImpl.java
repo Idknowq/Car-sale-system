@@ -5,9 +5,11 @@ import com.carsales.backend.mapper.sales.CustomerIntentMapper;
 import com.carsales.backend.mapper.sales.OrderMapper;
 import com.carsales.backend.model.dto.sales.CreateCustomerIntentRequest;
 import com.carsales.backend.model.dto.sales.CreateSalesOrderRequest;
+import com.carsales.backend.model.dto.sales.CompleteSalesOrderRequest;
 import com.carsales.backend.model.dto.sales.MyOrderQueryRequest;
 import com.carsales.backend.model.vo.sales.CreateCustomerIntentResponse;
 import com.carsales.backend.model.vo.sales.CreateSalesOrderResponse;
+import com.carsales.backend.model.vo.sales.CompleteSalesOrderResponse;
 import com.carsales.backend.model.vo.sales.MyOrderItemVo;
 import com.carsales.backend.model.vo.common.PageResult;
 import com.carsales.backend.model.vo.sales.SalesOrderVo;
@@ -54,7 +56,12 @@ public class OrderServiceImpl implements OrderService {
         params.put("otherAmount", request.getOtherAmount());
         try {
             orderMapper.callCreateSalesOrder(params);
+        } catch (DuplicateKeyException ex) {
+            throw new BizException(40910, "Vehicle already has a sales order: " + request.getVehicleVin());
         } catch (Exception ex) {
+            if (isVehicleOrderDuplicate(ex)) {
+                throw new BizException(40910, "Vehicle already has a sales order: " + request.getVehicleVin());
+            }
             throw new BizException(40001, "Create sales order failed: " + ex.getMessage());
         }
 
@@ -134,7 +141,7 @@ public class OrderServiceImpl implements OrderService {
         if (customerId != null) {
             validateExistingCustomerConsistency(customerId, request);
         } else {
-            Integer insertedCustomerId;
+            Integer insertedCustomerId = null;
             try {
                 insertedCustomerId = customerIntentMapper.insertCustomerIfAbsent(
                         request.getCustomerName(),
@@ -146,11 +153,20 @@ public class OrderServiceImpl implements OrderService {
                         request.getSourceChannel()
                 );
             } catch (DuplicateKeyException ex) {
-                throw new BizException(40902, "idCard already exists");
+                Integer existingByPhone = customerIntentMapper.selectCustomerIdByPhone(request.getPhone());
+                if (existingByPhone != null) {
+                    customerId = existingByPhone;
+                } else if (customerIntentMapper.selectCustomerIdByIdCard(request.getIdCard()) != null) {
+                    throw new BizException(40902, "idCard already exists");
+                } else {
+                    throw new BizException(50005, "Create customer intent failed: duplicate customer conflict");
+                }
             }
-            customerId = insertedCustomerId == null
-                    ? customerIntentMapper.selectCustomerIdByPhone(request.getPhone())
-                    : insertedCustomerId;
+            if (customerId == null) {
+                customerId = insertedCustomerId == null
+                        ? customerIntentMapper.selectCustomerIdByPhone(request.getPhone())
+                        : insertedCustomerId;
+            }
             if (customerId != null) {
                 validateExistingCustomerConsistency(customerId, request);
             }
@@ -174,6 +190,43 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return new CreateCustomerIntentResponse(customerId, intentId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CompleteSalesOrderResponse completeSalesOrder(Integer orderId, CompleteSalesOrderRequest request) {
+        SalesOrderVo order = orderMapper.selectOrderById(orderId);
+        if (order == null) {
+            throw new BizException(40401, "Order not found: " + orderId);
+        }
+        if (!Objects.equals(order.getStaffId(), request.getStaffId())) {
+            throw new BizException(40921, "staffId does not match order owner");
+        }
+
+        String status = order.getOrderStatus();
+        if ("COMPLETED".equals(status)) {
+            return new CompleteSalesOrderResponse(orderId, "COMPLETED");
+        }
+        if ("CANCELLED".equals(status)) {
+            throw new BizException(40922, "Cancelled order cannot be completed: " + orderId);
+        }
+        if (!"LOCKED".equals(status) && !"DEPOSIT_PAID".equals(status)) {
+            throw new BizException(40923, "Current order status cannot be completed: " + status);
+        }
+
+        try {
+            int affected = orderMapper.updateOrderStatusToCompleted(orderId);
+            if (affected <= 0) {
+                throw new BizException(50006, "Complete order failed: no row updated");
+            }
+        } catch (Exception ex) {
+            if (isDeliveryTriggerConflict(ex)) {
+                throw new BizException(40924, "Complete order failed: vehicle status is not LOCKED");
+            }
+            throw new BizException(40006, "Complete order failed: " + ex.getMessage());
+        }
+
+        return new CompleteSalesOrderResponse(orderId, "COMPLETED");
     }
 
     private void validateIntentRequest(CreateCustomerIntentRequest request) {
@@ -200,13 +253,13 @@ public class OrderServiceImpl implements OrderService {
         if (snapshot == null) {
             throw new BizException(50004, "customer not found while checking consistency: " + customerId);
         }
-        if (!Objects.equals(snapshot.getIdCard(), request.getIdCard())) {
+        if (!Objects.equals(normalizeText(snapshot.getIdCard()), normalizeText(request.getIdCard()))) {
             throw new BizException(40901, "phone and idCard belong to different customers");
         }
-        if (!Objects.equals(snapshot.getCustomerName(), request.getCustomerName())
-                || !Objects.equals(snapshot.getGender(), request.getGender())
-                || !Objects.equals(snapshot.getAddress(), request.getAddress())
-                || !Objects.equals(snapshot.getSourceChannel(), request.getSourceChannel())) {
+        if (!Objects.equals(normalizeText(snapshot.getCustomerName()), normalizeText(request.getCustomerName()))
+                || !Objects.equals(normalizeText(snapshot.getGender()), normalizeText(request.getGender()))
+                || !Objects.equals(normalizeText(snapshot.getAddress()), normalizeText(request.getAddress()))
+                || !Objects.equals(normalizeText(snapshot.getSourceChannel()), normalizeText(request.getSourceChannel()))) {
             throw new BizException(40903, "customer profile mismatch for existing phone");
         }
     }
@@ -218,5 +271,31 @@ public class OrderServiceImpl implements OrderService {
         if (customerIntentMapper.selectStaffId(staffId) == null) {
             throw new BizException(40403, "staff not found: " + staffId);
         }
+    }
+
+    private boolean isVehicleOrderDuplicate(Exception ex) {
+        String message = ex.getMessage();
+        if (message == null) {
+            return false;
+        }
+        return message.contains("uk_sales_order_vehicle_vin")
+                || message.contains("duplicate key value violates unique constraint");
+    }
+
+    private boolean isDeliveryTriggerConflict(Exception ex) {
+        String message = ex.getMessage();
+        if (message == null) {
+            return false;
+        }
+        return message.contains("cannot mark SOLD for order")
+                || message.contains("is not in LOCKED status");
+    }
+
+    private String normalizeText(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 }

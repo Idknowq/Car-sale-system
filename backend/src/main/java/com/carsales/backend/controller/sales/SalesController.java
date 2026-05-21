@@ -3,9 +3,11 @@ package com.carsales.backend.controller.sales;
 import com.carsales.backend.common.api.ApiResponse;
 import com.carsales.backend.model.dto.sales.CreateCustomerIntentRequest;
 import com.carsales.backend.model.dto.sales.CreateSalesOrderRequest;
+import com.carsales.backend.model.dto.sales.CompleteSalesOrderRequest;
 import com.carsales.backend.model.dto.sales.MyOrderQueryRequest;
 import com.carsales.backend.model.vo.sales.CreateCustomerIntentResponse;
 import com.carsales.backend.model.vo.sales.CreateSalesOrderResponse;
+import com.carsales.backend.model.vo.sales.CompleteSalesOrderResponse;
 import com.carsales.backend.model.vo.sales.MyOrderItemVo;
 import com.carsales.backend.model.vo.common.PageResult;
 import com.carsales.backend.model.vo.sales.SalesOrderVo;
@@ -37,6 +39,14 @@ public class SalesController {
     @PostMapping("/orders")
     public ApiResponse<CreateSalesOrderResponse> createSalesOrder(@Valid @RequestBody CreateSalesOrderRequest request) {
         return ApiResponse.ok(orderService.createSalesOrder(request));
+    }
+
+    @PostMapping("/orders/{orderId}/complete")
+    public ApiResponse<CompleteSalesOrderResponse> completeSalesOrder(
+            @PathVariable Integer orderId,
+            @Valid @RequestBody CompleteSalesOrderRequest request
+    ) {
+        return ApiResponse.ok(orderService.completeSalesOrder(orderId, request));
     }
 
     @GetMapping("/orders/{orderId}")
