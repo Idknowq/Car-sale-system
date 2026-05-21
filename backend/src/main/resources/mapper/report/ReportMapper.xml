@@ -64,4 +64,16 @@
         LIMIT #{topN}
     </select>
 
+    <select id="selectMonthlySalesReport" resultType="com.carsales.backend.model.vo.report.MonthlySalesReportItemVo">
+        SELECT
+            stat_year,
+            stat_month,
+            staff_id,
+            staff_name,
+            order_count,
+            sales_amount,
+            gross_profit
+        FROM fn_get_monthly_report(#{year}, #{month})
+    </select>
+
 </mapper>

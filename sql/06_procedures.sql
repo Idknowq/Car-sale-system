@@ -109,13 +109,22 @@ END;
 $$;
 
 -- ==========================================================
--- Procedure 2: sp_get_monthly_report
--- Return monthly completed-order report via refcursor.
+-- Function 2.1: fn_get_monthly_report
+-- Return monthly completed-order report as a table result set.
+-- JDBC can call this function directly via SELECT.
 -- ==========================================================
-CREATE OR REPLACE PROCEDURE sp_get_monthly_report(
-    IN     p_year      INT,
-    IN     p_month     INT,
-    INOUT  p_result    REFCURSOR DEFAULT 'cur_monthly_report'
+CREATE OR REPLACE FUNCTION fn_get_monthly_report(
+    p_year  INT,
+    p_month INT
+)
+RETURNS TABLE (
+    stat_year    INT,
+    stat_month   INT,
+    staff_id     INT,
+    staff_name   VARCHAR(100),
+    order_count  INT,
+    sales_amount NUMERIC(14, 2),
+    gross_profit NUMERIC(14, 2)
 )
 LANGUAGE plpgsql
 AS $$
@@ -130,7 +139,7 @@ BEGIN
     v_start_ts := to_timestamp(p_year::TEXT || '-' || lpad(p_month::TEXT, 2, '0') || '-01', 'YYYY-MM-DD');
     v_end_ts := v_start_ts + INTERVAL '1 month';
 
-    OPEN p_result FOR
+    RETURN QUERY
     SELECT
         p_year AS stat_year,
         p_month AS stat_month,
