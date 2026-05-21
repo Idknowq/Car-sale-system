@@ -3,6 +3,7 @@
 -- One-click deployment for all SQL scripts
 -- Run from sql/ directory in gsql/psql
 -- ============================================
+SET search_path TO public;
 
 \set ON_ERROR_STOP on
 \echo '== Deploy Start =='

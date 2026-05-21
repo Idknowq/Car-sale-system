@@ -4,6 +4,6 @@ app:
 spring:
   datasource:
     driver-class-name: org.opengauss.Driver
-    url: jdbc:opengauss://116.205.99.104:26000/car_sales?sslmode=disable
+    url: jdbc:opengauss://116.205.99.104:26000/car_sales?sslmode=disable&currentSchema=public
     username: qhd
     password: Qhd20041104
