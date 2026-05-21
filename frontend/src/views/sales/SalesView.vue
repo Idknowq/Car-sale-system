@@ -13,7 +13,7 @@
           <el-input v-model.trim="queryForm.phone" placeholder="精确匹配" clearable />
         </el-form-item>
         <el-form-item label="订单状态">
-          <el-select v-model="queryForm.orderStatus" clearable placeholder="全部">
+          <el-select v-model="queryForm.orderStatus" clearable placeholder="全部" class="status-select">
             <el-option label="LOCKED" value="LOCKED" />
             <el-option label="DEPOSIT_PAID" value="DEPOSIT_PAID" />
             <el-option label="COMPLETED" value="COMPLETED" />
@@ -220,6 +220,10 @@ const formatOrderStatusCell = (_row, _column, cellValue) => formatOrderStatus(ce
 .filter-form {
   display: flex;
   flex-wrap: wrap;
+}
+
+.status-select {
+  min-width: 180px;
 }
 
 .pager-row {

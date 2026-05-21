@@ -54,7 +54,12 @@ public class OrderServiceImpl implements OrderService {
         params.put("otherAmount", request.getOtherAmount());
         try {
             orderMapper.callCreateSalesOrder(params);
+        } catch (DuplicateKeyException ex) {
+            throw new BizException(40910, "Vehicle already has a sales order: " + request.getVehicleVin());
         } catch (Exception ex) {
+            if (isVehicleOrderDuplicate(ex)) {
+                throw new BizException(40910, "Vehicle already has a sales order: " + request.getVehicleVin());
+            }
             throw new BizException(40001, "Create sales order failed: " + ex.getMessage());
         }
 
@@ -134,7 +139,7 @@ public class OrderServiceImpl implements OrderService {
         if (customerId != null) {
             validateExistingCustomerConsistency(customerId, request);
         } else {
-            Integer insertedCustomerId;
+            Integer insertedCustomerId = null;
             try {
                 insertedCustomerId = customerIntentMapper.insertCustomerIfAbsent(
                         request.getCustomerName(),
@@ -146,11 +151,20 @@ public class OrderServiceImpl implements OrderService {
                         request.getSourceChannel()
                 );
             } catch (DuplicateKeyException ex) {
-                throw new BizException(40902, "idCard already exists");
+                Integer existingByPhone = customerIntentMapper.selectCustomerIdByPhone(request.getPhone());
+                if (existingByPhone != null) {
+                    customerId = existingByPhone;
+                } else if (customerIntentMapper.selectCustomerIdByIdCard(request.getIdCard()) != null) {
+                    throw new BizException(40902, "idCard already exists");
+                } else {
+                    throw new BizException(50005, "Create customer intent failed: duplicate customer conflict");
+                }
             }
-            customerId = insertedCustomerId == null
-                    ? customerIntentMapper.selectCustomerIdByPhone(request.getPhone())
-                    : insertedCustomerId;
+            if (customerId == null) {
+                customerId = insertedCustomerId == null
+                        ? customerIntentMapper.selectCustomerIdByPhone(request.getPhone())
+                        : insertedCustomerId;
+            }
             if (customerId != null) {
                 validateExistingCustomerConsistency(customerId, request);
             }
@@ -218,5 +232,14 @@ public class OrderServiceImpl implements OrderService {
         if (customerIntentMapper.selectStaffId(staffId) == null) {
             throw new BizException(40403, "staff not found: " + staffId);
         }
+    }
+
+    private boolean isVehicleOrderDuplicate(Exception ex) {
+        String message = ex.getMessage();
+        if (message == null) {
+            return false;
+        }
+        return message.contains("uk_sales_order_vehicle_vin")
+                || message.contains("duplicate key value violates unique constraint");
     }
 }
