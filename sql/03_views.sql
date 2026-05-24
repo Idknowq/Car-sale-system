@@ -7,74 +7,48 @@
 --    Gross profit: total_amount - purchase_cost
 CREATE OR REPLACE VIEW v_sales_performance AS
 SELECT
-    so.staff_id,
-    st.staff_no,
-    st.staff_name,
-    'MONTH'::VARCHAR(10) AS period_type,
-    EXTRACT(YEAR FROM so.created_at)::INT AS stat_year,
-    EXTRACT(QUARTER FROM so.created_at)::INT AS stat_quarter,
-    EXTRACT(MONTH FROM so.created_at)::INT AS stat_month,
-    TO_CHAR(so.created_at, 'YYYY-MM') AS period_label,
+    base.staff_id,
+    base.staff_no,
+    base.staff_name,
+    CASE
+        WHEN GROUPING(base.stat_month) = 0 THEN 'MONTH'
+        WHEN GROUPING(base.stat_quarter) = 0 THEN 'QUARTER'
+        ELSE 'YEAR'
+    END::VARCHAR(10) AS period_type,
+    base.stat_year,
+    CASE WHEN GROUPING(base.stat_quarter) = 0 THEN base.stat_quarter ELSE NULL::INT END AS stat_quarter,
+    CASE WHEN GROUPING(base.stat_month) = 0 THEN base.stat_month ELSE NULL::INT END AS stat_month,
+    CASE
+        WHEN GROUPING(base.stat_month) = 0 THEN
+            TO_CHAR(base.stat_year, 'FM0000') || '-' || TO_CHAR(base.stat_month, 'FM00')
+        WHEN GROUPING(base.stat_quarter) = 0 THEN
+            TO_CHAR(base.stat_year, 'FM0000') || '-Q' || base.stat_quarter::TEXT
+        ELSE
+            TO_CHAR(base.stat_year, 'FM0000')
+    END AS period_label,
     COUNT(*)::INT AS order_count,
-    SUM(so.total_amount)::NUMERIC(14, 2) AS sales_amount,
-    SUM(so.total_amount - v.purchase_cost)::NUMERIC(14, 2) AS gross_profit
-FROM sales_order so
-JOIN staff st ON st.staff_id = so.staff_id
-JOIN vehicle v ON v.vehicle_vin = so.vehicle_vin
-WHERE so.order_status = 'COMPLETED'
-GROUP BY
-    so.staff_id, st.staff_no, st.staff_name,
-    EXTRACT(YEAR FROM so.created_at),
-    EXTRACT(QUARTER FROM so.created_at),
-    EXTRACT(MONTH FROM so.created_at),
-    TO_CHAR(so.created_at, 'YYYY-MM')
-
-UNION ALL
-
-SELECT
-    so.staff_id,
-    st.staff_no,
-    st.staff_name,
-    'QUARTER'::VARCHAR(10) AS period_type,
-    EXTRACT(YEAR FROM so.created_at)::INT AS stat_year,
-    EXTRACT(QUARTER FROM so.created_at)::INT AS stat_quarter,
-    NULL::INT AS stat_month,
-    TO_CHAR(so.created_at, 'YYYY') || '-Q' || EXTRACT(QUARTER FROM so.created_at)::INT AS period_label,
-    COUNT(*)::INT AS order_count,
-    SUM(so.total_amount)::NUMERIC(14, 2) AS sales_amount,
-    SUM(so.total_amount - v.purchase_cost)::NUMERIC(14, 2) AS gross_profit
-FROM sales_order so
-JOIN staff st ON st.staff_id = so.staff_id
-JOIN vehicle v ON v.vehicle_vin = so.vehicle_vin
-WHERE so.order_status = 'COMPLETED'
-GROUP BY
-    so.staff_id, st.staff_no, st.staff_name,
-    EXTRACT(YEAR FROM so.created_at),
-    EXTRACT(QUARTER FROM so.created_at),
-    TO_CHAR(so.created_at, 'YYYY')
-
-UNION ALL
-
-SELECT
-    so.staff_id,
-    st.staff_no,
-    st.staff_name,
-    'YEAR'::VARCHAR(10) AS period_type,
-    EXTRACT(YEAR FROM so.created_at)::INT AS stat_year,
-    NULL::INT AS stat_quarter,
-    NULL::INT AS stat_month,
-    TO_CHAR(so.created_at, 'YYYY') AS period_label,
-    COUNT(*)::INT AS order_count,
-    SUM(so.total_amount)::NUMERIC(14, 2) AS sales_amount,
-    SUM(so.total_amount - v.purchase_cost)::NUMERIC(14, 2) AS gross_profit
-FROM sales_order so
-JOIN staff st ON st.staff_id = so.staff_id
-JOIN vehicle v ON v.vehicle_vin = so.vehicle_vin
-WHERE so.order_status = 'COMPLETED'
-GROUP BY
-    so.staff_id, st.staff_no, st.staff_name,
-    EXTRACT(YEAR FROM so.created_at),
-    TO_CHAR(so.created_at, 'YYYY');
+    SUM(base.total_amount)::NUMERIC(14, 2) AS sales_amount,
+    SUM(base.gross_profit)::NUMERIC(14, 2) AS gross_profit
+FROM (
+    SELECT
+        so.staff_id,
+        st.staff_no,
+        st.staff_name,
+        EXTRACT(YEAR FROM so.created_at)::INT AS stat_year,
+        EXTRACT(QUARTER FROM so.created_at)::INT AS stat_quarter,
+        EXTRACT(MONTH FROM so.created_at)::INT AS stat_month,
+        so.total_amount,
+        (so.total_amount - v.purchase_cost) AS gross_profit
+    FROM sales_order so
+    JOIN staff st ON st.staff_id = so.staff_id
+    JOIN vehicle v ON v.vehicle_vin = so.vehicle_vin
+    WHERE so.order_status = 'COMPLETED'
+) base
+GROUP BY GROUPING SETS (
+    (base.staff_id, base.staff_no, base.staff_name, base.stat_year, base.stat_quarter, base.stat_month),
+    (base.staff_id, base.staff_no, base.staff_name, base.stat_year, base.stat_quarter),
+    (base.staff_id, base.staff_no, base.staff_name, base.stat_year)
+);
 
 -- 2) Inventory summary view (real-time by model)
 CREATE OR REPLACE VIEW v_inventory_summary AS
