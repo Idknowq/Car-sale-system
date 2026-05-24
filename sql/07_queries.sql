@@ -65,27 +65,23 @@ LIMIT 5;
 
 -- ==========================================================
 -- Q4: 查询库存周期超过90天的滞销车辆清单
--- 说明：原生 SQL，库存周期=delivery_time - inventory_in_date（已交付车辆）。
+-- 说明：按当前库存口径统计，仅包含“仍在库(IN_INVENTORY)”且入库超90天的车辆。
 -- ==========================================================
 SELECT
-    so.order_id,
     v.vehicle_vin,
     b.brand_name,
     m.model_name,
     m.model_year,
     m.trim_name,
     v.inventory_in_date,
-    so.delivery_time,
-    EXTRACT(DAY FROM (so.delivery_time - v.inventory_in_date::TIMESTAMP))::INT AS inventory_days
-FROM sales_order so
-JOIN vehicle v ON v.vehicle_vin = so.vehicle_vin
+    (CURRENT_DATE - v.inventory_in_date) AS inventory_days
+FROM vehicle v
 JOIN model m ON m.model_id = v.model_id
 JOIN brand b ON b.brand_id = m.brand_id
-WHERE so.order_status = 'COMPLETED'
+WHERE v.current_status = 'IN_INVENTORY'
   AND v.inventory_in_date IS NOT NULL
-  AND so.delivery_time IS NOT NULL
-  AND EXTRACT(DAY FROM (so.delivery_time - v.inventory_in_date::TIMESTAMP)) > 90
-ORDER BY inventory_days DESC, so.delivery_time;
+  AND (CURRENT_DATE - v.inventory_in_date) > 90
+ORDER BY inventory_days DESC, v.inventory_in_date ASC, v.vehicle_vin;
 
 -- ==========================================================
 -- Q5: 根据客户历史消费总额进行客户分类

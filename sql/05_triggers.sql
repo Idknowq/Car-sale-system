@@ -22,8 +22,8 @@ BEGIN
 
     GET DIAGNOSTICS v_rows = ROW_COUNT;
     IF v_rows = 0 THEN
-        RAISE EXCEPTION 'Vehicle % is not in IN_INVENTORY, cannot lock for order %',
-            NEW.vehicle_vin, NEW.order_id;
+        RAISE EXCEPTION 'Vehicle % is not in IN_INVENTORY, cannot lock for new order',
+            NEW.vehicle_vin;
     END IF;
 
     INSERT INTO vehicle_status_log
@@ -37,7 +37,7 @@ $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_lock_car_on_order ON sales_order;
 CREATE TRIGGER trg_lock_car_on_order
-AFTER INSERT ON sales_order
+BEFORE INSERT ON sales_order
 FOR EACH ROW
 EXECUTE PROCEDURE fn_lock_car_on_order();
 

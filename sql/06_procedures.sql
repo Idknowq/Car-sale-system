@@ -26,7 +26,6 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
     v_total_amount   NUMERIC(12, 2);
-    v_vehicle_status VARCHAR(20);
 BEGIN
     -- Basic reference checks
     IF NOT EXISTS (SELECT 1 FROM customer c WHERE c.customer_id = p_customer_id) THEN
@@ -35,22 +34,6 @@ BEGIN
 
     IF NOT EXISTS (SELECT 1 FROM staff s WHERE s.staff_id = p_staff_id) THEN
         RAISE EXCEPTION 'Staff % does not exist', p_staff_id;
-    END IF;
-
-    -- Lock target vehicle row and validate status
-    SELECT v.current_status
-      INTO v_vehicle_status
-      FROM vehicle v
-     WHERE v.vehicle_vin = p_vehicle_vin
-     FOR UPDATE;
-
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Vehicle % does not exist', p_vehicle_vin;
-    END IF;
-
-    IF v_vehicle_status <> 'IN_INVENTORY' THEN
-        RAISE EXCEPTION 'Vehicle % status is %, expected IN_INVENTORY',
-            p_vehicle_vin, v_vehicle_status;
     END IF;
 
     -- Amount checks
