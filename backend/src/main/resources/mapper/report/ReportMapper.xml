@@ -64,7 +64,7 @@
         LIMIT #{topN}
     </select>
 
-    <select id="selectMonthlySalesReport" resultType="com.carsales.backend.model.vo.report.MonthlySalesReportItemVo">
+    <select id="selectMonthlySalesReportPage" resultType="com.carsales.backend.model.vo.report.MonthlySalesReportItemVo">
         SELECT
             stat_year,
             stat_month,
@@ -73,6 +73,13 @@
             order_count,
             sales_amount,
             gross_profit
+        FROM fn_get_monthly_report(#{year}, #{month})
+        ORDER BY sales_amount DESC, staff_id ASC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countMonthlySalesReport" resultType="long">
+        SELECT COUNT(1)
         FROM fn_get_monthly_report(#{year}, #{month})
     </select>
 
