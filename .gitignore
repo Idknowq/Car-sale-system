@@ -40,8 +40,8 @@ yarn-error.log*
 .env.*.local
 !.env.example
 
-# Legacy console local config
-src/main/resources/application.properties
-
 # Web backend local config (if created for local override)
 backend/src/main/resources/application-local.yml
+backend/src/main/resources/application-opengauss-local.yml
+backend/src/main/resources/application-postgres-local.yml
+backend/src/main/resources/application-secrets.yml
