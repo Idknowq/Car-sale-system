@@ -20,7 +20,14 @@ public interface ReportMapper {
 
     List<BestSellingModelRankingItemVo> selectBestSellingModels(@Param("topN") Integer topN);
 
-    List<MonthlySalesReportItemVo> selectMonthlySalesReport(
+    List<MonthlySalesReportItemVo> selectMonthlySalesReportPage(
+            @Param("year") Integer year,
+            @Param("month") Integer month,
+            @Param("offset") Integer offset,
+            @Param("pageSize") Integer pageSize
+    );
+
+    long countMonthlySalesReport(
             @Param("year") Integer year,
             @Param("month") Integer month
     );

@@ -9,13 +9,13 @@
       <template #header>表格区</template>
       <ReportResultTable
         :report-type="filters.reportType"
-        :rows="pagedRows"
+        :rows="displayRows"
         :loading="loading"
         :empty-text="queried ? '暂无匹配数据' : '请先设置筛选条件后查询'"
       />
     </el-card>
 
-    <el-card shadow="never" class="section-card">
+    <el-card v-if="isMonthlyReport" shadow="never" class="section-card">
       <template #header>分页区</template>
       <div class="pager-row">
         <div class="summary">共 {{ total }} 条</div>
@@ -23,7 +23,7 @@
           v-model:current-page="pageNo"
           v-model:page-size="pageSize"
           :total="total"
-          :page-sizes="[5, 10, 20, 50]"
+          :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handlePageSizeChange"
           @current-change="handlePageNoChange"
@@ -62,13 +62,11 @@ const rows = ref([])
 
 const pageNo = ref(1)
 const pageSize = ref(10)
+const monthlyTotal = ref(0)
 
-const total = computed(() => rows.value.length)
-const pagedRows = computed(() => {
-  const start = (pageNo.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return rows.value.slice(start, end)
-})
+const isMonthlyReport = computed(() => filters.reportType === 'monthly')
+const total = computed(() => (isMonthlyReport.value ? monthlyTotal.value : rows.value.length))
+const displayRows = computed(() => rows.value)
 
 const validateFilters = () => {
   if (filters.reportType === 'monthly') {
@@ -117,7 +115,9 @@ const buildRequest = () => {
       runner: queryMonthlySalesReport,
       params: {
         year: filters.year,
-        month: filters.month
+        month: filters.month,
+        pageNo: pageNo.value,
+        pageSize: pageSize.value
       }
     }
   }
@@ -157,9 +157,18 @@ const handleSearch = async () => {
   loading.value = true
   try {
     const result = await runner(params)
-    rows.value = Array.isArray(result) ? result : []
+    if (isMonthlyReport.value) {
+      rows.value = Array.isArray(result?.records) ? result.records : []
+      monthlyTotal.value = Number(result?.total || 0)
+      pageNo.value = Number(result?.pageNo || pageNo.value)
+      pageSize.value = Number(result?.pageSize || pageSize.value)
+    } else {
+      rows.value = Array.isArray(result) ? result : []
+      monthlyTotal.value = 0
+      pageNo.value = 1
+      pageSize.value = 10
+    }
     queried.value = true
-    pageNo.value = 1
   } finally {
     loading.value = false
   }
@@ -168,6 +177,7 @@ const handleSearch = async () => {
 const handleReset = () => {
   Object.assign(filters, createDefaultFilters())
   rows.value = []
+  monthlyTotal.value = 0
   queried.value = false
   pageNo.value = 1
   pageSize.value = 10
@@ -175,11 +185,17 @@ const handleReset = () => {
 
 const handlePageNoChange = (value) => {
   pageNo.value = value
+  if (isMonthlyReport.value && queried.value) {
+    handleSearch()
+  }
 }
 
 const handlePageSizeChange = (value) => {
   pageSize.value = value
   pageNo.value = 1
+  if (isMonthlyReport.value && queried.value) {
+    handleSearch()
+  }
 }
 </script>
 
