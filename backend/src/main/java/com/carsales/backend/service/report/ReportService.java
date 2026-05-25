@@ -3,6 +3,7 @@ package com.carsales.backend.service.report;
 import com.carsales.backend.model.dto.report.BestSellingModelQueryDto;
 import com.carsales.backend.model.dto.report.MonthlySalesReportQueryDto;
 import com.carsales.backend.model.dto.report.SalesPerformanceRankingQueryDto;
+import com.carsales.backend.model.vo.common.PageResult;
 import com.carsales.backend.model.vo.report.BestSellingModelRankingItemVo;
 import com.carsales.backend.model.vo.report.MonthlySalesReportItemVo;
 import com.carsales.backend.model.vo.report.SalesPerformanceRankingItemVo;
@@ -14,5 +15,5 @@ public interface ReportService {
 
     List<BestSellingModelRankingItemVo> queryBestSellingModels(BestSellingModelQueryDto query);
 
-    List<MonthlySalesReportItemVo> queryMonthlySalesReport(MonthlySalesReportQueryDto query);
+    PageResult<MonthlySalesReportItemVo> queryMonthlySalesReport(MonthlySalesReportQueryDto query);
 }

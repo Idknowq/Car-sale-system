@@ -4,6 +4,7 @@ import com.carsales.backend.common.api.ApiResponse;
 import com.carsales.backend.model.dto.report.BestSellingModelQueryDto;
 import com.carsales.backend.model.dto.report.MonthlySalesReportQueryDto;
 import com.carsales.backend.model.dto.report.SalesPerformanceRankingQueryDto;
+import com.carsales.backend.model.vo.common.PageResult;
 import com.carsales.backend.model.vo.report.BestSellingModelRankingItemVo;
 import com.carsales.backend.model.vo.report.MonthlySalesReportItemVo;
 import com.carsales.backend.model.vo.report.SalesPerformanceRankingItemVo;
@@ -43,7 +44,7 @@ public class ReportController {
     }
 
     @GetMapping("/monthly-sales")
-    public ApiResponse<List<MonthlySalesReportItemVo>> queryMonthlySalesReport(@Valid MonthlySalesReportQueryDto query) {
+    public ApiResponse<PageResult<MonthlySalesReportItemVo>> queryMonthlySalesReport(@Valid MonthlySalesReportQueryDto query) {
         return ApiResponse.ok(reportService.queryMonthlySalesReport(query));
     }
 }

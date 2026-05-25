@@ -16,6 +16,13 @@ public class MonthlySalesReportQueryDto {
     @Max(value = 12, message = "month must be <= 12")
     private Integer month;
 
+    @Min(value = 1, message = "pageNo must be >= 1")
+    private Integer pageNo = 1;
+
+    @Min(value = 1, message = "pageSize must be >= 1")
+    @Max(value = 100, message = "pageSize must be <= 100")
+    private Integer pageSize = 10;
+
     public Integer getYear() {
         return year;
     }
@@ -30,5 +37,21 @@ public class MonthlySalesReportQueryDto {
 
     public void setMonth(Integer month) {
         this.month = month;
+    }
+
+    public Integer getPageNo() {
+        return pageNo;
+    }
+
+    public void setPageNo(Integer pageNo) {
+        this.pageNo = pageNo;
+    }
+
+    public Integer getPageSize() {
+        return pageSize;
+    }
+
+    public void setPageSize(Integer pageSize) {
+        this.pageSize = pageSize;
     }
 }
