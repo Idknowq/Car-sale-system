@@ -49,7 +49,37 @@ gsql -d car_sales -f sql/00_deploy_all.sql
 gsql -d car_sales -f sql/00_reset_and_deploy.sql
 ```
 
-## 4. 后端启动
+## 4. 启动方式（基于 `.env`）
+
+首次拉取后，先准备本地配置：
+
+```bash
+cp .env.example .env
+```
+
+然后编辑 `.env`，至少填写/确认以下字段：
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `BACKEND_PORT`
+- `VITE_PORT`
+- `VITE_API_BASE_URL`
+
+说明：
+- `DB_PASSWORD` 在 `application-opengauss.yml` 中无默认值，未配置将启动失败。
+- 后端端口读取 `BACKEND_PORT`（默认 8080）。
+- 前端 dev 端口读取 `VITE_PORT`（默认 5173）。
+- 前端请求地址读取 `VITE_API_BASE_URL`（默认 `http://localhost:8080`）。
+
+每次启动前加载 `.env` 到当前 shell：
+
+```bash
+set -a
+source .env
+set +a
+```
+
+### 4.1 启动后端
 
 ```bash
 cd backend
@@ -63,9 +93,9 @@ mvn spring-boot:run
 - `backend/src/main/resources/application-opengauss.yml`
 - `backend/src/main/resources/application-postgres.yml`（仅预留）
 
-健康检查：
+健康检查（按 `BACKEND_PORT`）：
 
-- `GET http://localhost:8080/actuator/health`
+- `GET http://localhost:${BACKEND_PORT}/actuator/health`
 
 示例接口：
 
@@ -74,7 +104,7 @@ mvn spring-boot:run
 - `/api/inventory/ping`
 - `/api/report/ping`
 
-## 5. 前端启动
+### 4.2 启动前端
 
 ```bash
 cd frontend
@@ -82,7 +112,7 @@ npm install
 npm run dev
 ```
 
-默认地址：`http://localhost:5173`
+默认地址（按 `VITE_PORT`）：`http://localhost:${VITE_PORT}`
 
 生产构建验证：
 
@@ -114,7 +144,7 @@ frontend/src
 └─ views/                   # 模块页面
 ```
 
-## 6. 前端协作约定
+## 5. 前端协作约定
 
 - 并行开发规范文档：`FRONTEND_AGENT_RULES.md`
 - 三模块并行开发时必须遵守该文档中的：
@@ -123,7 +153,7 @@ frontend/src
   - 统一页面结构与交互约定
   - 提交前构建检查（`npm run build`）
 
-## 7. 约定
+## 6. 约定
 
 - 统一响应结构：`{ code, message, data }`
 - API 前缀：
@@ -133,6 +163,6 @@ frontend/src
   - `/api/report/*`
 - 写操作必须事务化，SQL 必须参数化。
 
-## 8. 迁移说明
+## 7. 迁移说明
 
 已完成一次性切换：旧控制台 `src/` 与根 `pom.xml` 已移除。当前仅维护 Web 架构。
