@@ -7,7 +7,7 @@
       <el-button type="primary" :loading="loading" @click="emit('search', { ...query })">查询</el-button>
     </div>
 
-    <el-table :data="records" v-loading="loading" border empty-text="暂无预警数据" max-height="420">
+    <AppTable :data="records" :loading="loading" empty-text="暂无预警数据" :stripe="false" max-height="420">
       <el-table-column prop="brandName" label="品牌" min-width="120" />
       <el-table-column prop="modelName" label="车型" min-width="120" />
       <el-table-column prop="modelYear" label="年款" width="90" />
@@ -17,7 +17,7 @@
       <el-table-column prop="lockedCount" label="锁定" width="90" />
       <el-table-column prop="inTransitCount" label="在途" width="90" />
       <el-table-column prop="shortageCount" label="缺口" width="90" />
-    </el-table>
+    </AppTable>
 
     <template #footer>
       <el-button @click="$emit('close')">关闭</el-button>
@@ -27,6 +27,7 @@
 
 <script setup>
 import { reactive, watch } from 'vue'
+import AppTable from '../common/AppTable.vue'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },

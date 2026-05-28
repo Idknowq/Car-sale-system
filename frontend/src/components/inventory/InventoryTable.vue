@@ -1,5 +1,5 @@
 <template>
-  <el-table :data="records" v-loading="loading" stripe border empty-text="暂无库存数据">
+  <AppTable :data="records" :loading="loading" empty-text="暂无库存数据">
     <el-table-column prop="vehicleVin" label="VIN" min-width="180" />
     <el-table-column prop="brandName" label="品牌" min-width="120" />
     <el-table-column prop="modelName" label="车型" min-width="120" />
@@ -25,10 +25,11 @@
         <span v-else>-</span>
       </template>
     </el-table-column>
-  </el-table>
+  </AppTable>
 </template>
 
 <script setup>
+import AppTable from '../common/AppTable.vue'
 import { formatDate, formatInventoryStatus } from '../../utils/format'
 
 defineProps({
