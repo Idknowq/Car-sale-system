@@ -54,6 +54,7 @@ import InventoryTable from '../../components/inventory/InventoryTable.vue'
 import InventoryPagination from '../../components/inventory/InventoryPagination.vue'
 import InventoryInboundDialog from '../../components/inventory/InventoryInboundDialog.vue'
 import InventoryAlertDialog from '../../components/inventory/InventoryAlertDialog.vue'
+import { isNetworkError } from '../../utils/request'
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -98,7 +99,9 @@ async function fetchVehicles() {
   } catch (error) {
     records.value = []
     total.value = 0
-    errorMessage.value = error?.message || '库存查询失败'
+    errorMessage.value = isNetworkError(error)
+      ? '库存查询失败：服务连接异常，请检查后端服务或网络'
+      : error?.message || '库存查询失败'
   } finally {
     loading.value = false
   }
