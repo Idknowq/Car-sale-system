@@ -15,6 +15,7 @@ RETURNS TRIGGER AS $$
 DECLARE
     v_rows INT;
 BEGIN
+    -- BEFORE INSERT keeps the order row and vehicle lock in the same atomic write.
     UPDATE vehicle
     SET current_status = 'LOCKED'
     WHERE vehicle_vin = NEW.vehicle_vin
@@ -53,6 +54,7 @@ DECLARE
     v_rows INT;
 BEGIN
     IF OLD.order_status <> 'COMPLETED' AND NEW.order_status = 'COMPLETED' THEN
+        -- Completing an order is the only path that moves a locked vehicle to sold.
         UPDATE vehicle
         SET current_status = 'SOLD'
         WHERE vehicle_vin = NEW.vehicle_vin
@@ -97,6 +99,7 @@ DECLARE
     v_rows INT;
 BEGIN
     IF OLD.order_status <> 'CANCELLED' AND NEW.order_status = 'CANCELLED' THEN
+        -- Delivered orders are final; only pending locked orders can release inventory.
         IF OLD.order_status = 'COMPLETED' THEN
             RAISE EXCEPTION 'Completed order % cannot be cancelled', NEW.order_id;
         END IF;

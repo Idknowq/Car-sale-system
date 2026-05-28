@@ -8,17 +8,12 @@
 
 -- ==========================================================
 -- Q1: 查询指定时间段内（先按月度）的销售统计
--- 说明：复用函数 fn_get_monthly_report（输入年份、月份）。
+-- 说明：复用存储过程 sp_get_monthly_report（输入年份、月份）。
 -- ==========================================================
-SELECT
-    stat_year,
-    stat_month,
-    staff_id,
-    staff_name,
-    order_count,
-    sales_amount,
-    gross_profit
-FROM fn_get_monthly_report(2026, 2);
+BEGIN;
+CALL sp_get_monthly_report(2026, 2, 'cur_monthly_report');
+FETCH ALL FROM cur_monthly_report;
+COMMIT;
 
 -- ==========================================================
 -- Q2: 查询每位销售顾问的月度/季度业绩并排名
