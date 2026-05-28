@@ -1,5 +1,5 @@
 <template>
-  <el-table :data="rows" border v-loading="loading" :empty-text="emptyText">
+  <AppTable :data="rows" :loading="loading" :empty-text="emptyText">
     <template v-if="reportType === 'monthly'">
       <el-table-column prop="statYear" label="年份" width="100" />
       <el-table-column prop="statMonth" label="月份" width="100" />
@@ -41,10 +41,11 @@
         <template #default="{ row }">{{ formatMoney(row.salesAmount) }}</template>
       </el-table-column>
     </template>
-  </el-table>
+  </AppTable>
 </template>
 
 <script setup>
+import AppTable from '../common/AppTable.vue'
 import { formatMoney } from '../../utils/format'
 
 defineProps({
