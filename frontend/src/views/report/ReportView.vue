@@ -17,18 +17,13 @@
 
     <el-card v-if="isMonthlyReport" shadow="never" class="section-card">
       <template #header>分页区</template>
-      <div class="pager-row">
-        <div class="summary">共 {{ total }} 条</div>
-        <el-pagination
-          v-model:current-page="pageNo"
-          v-model:page-size="pageSize"
-          :total="total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handlePageSizeChange"
-          @current-change="handlePageNoChange"
-        />
-      </div>
+      <AppPagination
+        v-model:current-page="pageNo"
+        v-model:page-size="pageSize"
+        :total="total"
+        @change-size="handlePageSizeChange"
+        @change-page="handlePageNoChange"
+      />
     </el-card>
   </div>
 </template>
@@ -36,6 +31,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import AppPagination from '../../components/common/AppPagination.vue'
 import ReportFilterPanel from '../../components/report/ReportFilterPanel.vue'
 import ReportResultTable from '../../components/report/ReportResultTable.vue'
 import {
@@ -204,15 +200,4 @@ const handlePageSizeChange = (value) => {
   margin-bottom: 16px;
 }
 
-.pager-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.summary {
-  color: #606266;
-}
 </style>

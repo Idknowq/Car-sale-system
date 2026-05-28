@@ -44,7 +44,7 @@
 
     <el-card shadow="never" class="section-card">
       <template #header>表格区</template>
-      <el-table :data="tableData" border stripe v-loading="loading" empty-text="暂无订单数据">
+      <AppTable :data="tableData" :loading="loading" empty-text="暂无订单数据">
         <el-table-column prop="orderId" label="订单ID" width="100" />
         <el-table-column prop="customerId" label="客户ID" width="100" />
         <el-table-column prop="customerName" label="客户姓名" min-width="120" />
@@ -68,24 +68,19 @@
             </el-button>
           </template>
         </el-table-column>
-      </el-table>
+      </AppTable>
     </el-card>
 
     <el-card shadow="never" class="section-card">
       <template #header>分页区</template>
-      <div class="pager-row">
-        <div class="total-text">共 {{ total }} 条</div>
-        <el-pagination
-          background
-          layout="prev, pager, next, sizes"
-          :current-page="queryForm.pageNo"
-          :page-size="queryForm.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          @current-change="handleCurrentChange"
-          @size-change="handleSizeChange"
-        />
-      </div>
+      <AppPagination
+        :total="total"
+        :current-page="queryForm.pageNo"
+        :page-size="queryForm.pageSize"
+        layout="prev, pager, next, sizes"
+        @change-page="handleCurrentChange"
+        @change-size="handleSizeChange"
+      />
     </el-card>
 
     <CreateOrderDialog
@@ -105,6 +100,8 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import AppPagination from '../../components/common/AppPagination.vue'
+import AppTable from '../../components/common/AppTable.vue'
 import CreateIntentDialog from '../../components/sales/CreateIntentDialog.vue'
 import CreateOrderDialog from '../../components/sales/CreateOrderDialog.vue'
 import { completeSalesOrder, createCustomerIntent, createSalesOrder, queryMyOrders } from '../../api/sales'
@@ -268,14 +265,4 @@ const formatOrderStatusCell = (_row, _column, cellValue) => formatOrderStatus(ce
   min-width: 180px;
 }
 
-.pager-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.total-text {
-  color: #606266;
-}
 </style>
