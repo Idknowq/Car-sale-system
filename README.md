@@ -99,7 +99,6 @@ mvn spring-boot:run
 
 示例接口：
 
-- `/api/auth/ping`
 - `/api/sales/ping`
 - `/api/inventory/ping`
 - `/api/report/ping`
@@ -157,7 +156,6 @@ frontend/src
 
 - 统一响应结构：`{ code, message, data }`
 - API 前缀：
-  - `/api/auth/*`
   - `/api/sales/*`
   - `/api/inventory/*`
   - `/api/report/*`
