@@ -10,6 +10,7 @@ SELECT
     base.staff_id,
     base.staff_no,
     base.staff_name,
+    -- GROUPING marks columns omitted by a grouping set; use it to label month/quarter/year rows.
     CASE
         WHEN GROUPING(base.stat_month) = 0 THEN 'MONTH'
         WHEN GROUPING(base.stat_quarter) = 0 THEN 'QUARTER'
@@ -44,6 +45,7 @@ FROM (
     JOIN vehicle v ON v.vehicle_vin = so.vehicle_vin
     WHERE so.order_status = 'COMPLETED'
 ) base
+-- One scan produces monthly, quarterly, and yearly staff performance rows.
 GROUP BY GROUPING SETS (
     (base.staff_id, base.staff_no, base.staff_name, base.stat_year, base.stat_quarter, base.stat_month),
     (base.staff_id, base.staff_no, base.staff_name, base.stat_year, base.stat_quarter),

@@ -44,6 +44,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CreateSalesOrderResponse createSalesOrder(CreateSalesOrderRequest request) {
+        // The database procedure and triggers own order creation and inventory locking.
         Map<String, Object> params = new HashMap<>();
         params.put("customerId", request.getCustomerId());
         params.put("staffId", request.getStaffId());
@@ -137,6 +138,7 @@ public class OrderServiceImpl implements OrderService {
         validateIntentRequest(request);
         validateModelAndStaff(request.getModelId(), request.getStaffId());
 
+        // Reuse customers by phone, but verify identity fields before attaching a new intent.
         Integer customerId = customerIntentMapper.selectCustomerIdByPhone(request.getPhone());
         if (customerId != null) {
             validateExistingCustomerConsistency(customerId, request);
@@ -215,6 +217,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         try {
+            // The update trigger moves the vehicle from LOCKED to SOLD in the same transaction.
             int affected = orderMapper.updateOrderStatusToCompleted(orderId);
             if (affected <= 0) {
                 throw new BizException(50006, "Complete order failed: no row updated");

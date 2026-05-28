@@ -92,9 +92,51 @@ END;
 $$;
 
 -- ==========================================================
+-- Procedure 2: sp_get_monthly_report
+-- Return monthly completed-order report through a refcursor.
+-- ==========================================================
+CREATE OR REPLACE PROCEDURE sp_get_monthly_report(
+    IN     p_year   INT,
+    IN     p_month  INT,
+    INOUT  p_result REFCURSOR DEFAULT 'cur_monthly_report'
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_start_ts TIMESTAMP;
+    v_end_ts   TIMESTAMP;
+BEGIN
+    IF p_month < 1 OR p_month > 12 THEN
+        RAISE EXCEPTION 'Invalid month %, expected 1..12', p_month;
+    END IF;
+
+    v_start_ts := to_timestamp(p_year::TEXT || '-' || lpad(p_month::TEXT, 2, '0') || '-01', 'YYYY-MM-DD');
+    v_end_ts := v_start_ts + INTERVAL '1 month';
+
+    OPEN p_result FOR
+    SELECT
+        p_year AS stat_year,
+        p_month AS stat_month,
+        st.staff_id,
+        st.staff_name,
+        COUNT(*)::INT AS order_count,
+        SUM(so.total_amount)::NUMERIC(14, 2) AS sales_amount,
+        SUM(so.total_amount - v.purchase_cost)::NUMERIC(14, 2) AS gross_profit
+    FROM sales_order so
+    JOIN staff st ON st.staff_id = so.staff_id
+    JOIN vehicle v ON v.vehicle_vin = so.vehicle_vin
+    WHERE so.order_status = 'COMPLETED'
+      AND so.created_at >= v_start_ts
+      AND so.created_at < v_end_ts
+    GROUP BY st.staff_id, st.staff_name
+    ORDER BY sales_amount DESC, gross_profit DESC;
+END;
+$$;
+
+-- ==========================================================
 -- Function 2.1: fn_get_monthly_report
--- Return monthly completed-order report as a table result set.
--- JDBC can call this function directly via SELECT.
+-- Compatibility helper for JDBC/MyBatis SELECT-based calls.
+-- The required stored procedure object is sp_get_monthly_report.
 -- ==========================================================
 CREATE OR REPLACE FUNCTION fn_get_monthly_report(
     p_year  INT,
