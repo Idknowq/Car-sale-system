@@ -23,7 +23,6 @@ backend/src/main/java/com/carsales/backend
 │  └─ handler/               # 全局异常处理
 ├─ config/                   # Spring/MyBatis/CORS 配置
 ├─ controller/
-│  ├─ auth/
 │  ├─ sales/
 │  ├─ inventory/
 │  └─ report/
@@ -55,9 +54,11 @@ backend/src/main/java/com/carsales/backend
 backend/src/main/resources/mapper/
 ├─ inventory/
 │  └─ inventory_mapper.xml
-├─ sales/
-│  └─ OrderMapper.xml
-└─ placeholder.xml
+├─ report/
+│  └─ ReportMapper.xml
+└─ sales/
+   ├─ CustomerIntentMapper.xml
+   └─ OrderMapper.xml
 ```
 
 ## 4. 约定（供后续 agent 执行）
