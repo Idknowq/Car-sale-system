@@ -1,77 +1,137 @@
 # 汽车销售管理系统（Web 版）
 
-## 1. 项目结构
+## 1. 项目说明
+
+本项目是一个面向 4S 店业务的汽车销售管理系统，当前实现为前后端分离 Web 应用，主要功能包括：
+
+- 销售前台：创建意向客户、创建销售订单、查询销售顾问名下订单、完成订单交付。
+- 库存管理：车辆库存查询、在途车辆入库、库存预警查询。
+- 报表中心：月度销售统计、销售顾问业绩排行、畅销车型排行。
+- 数据库对象：完成建表、初始化数据、视图、索引、触发器、存储过程和复杂查询脚本。
+
+项目结构：
 
 ```text
 .
-├─ backend/                 # Spring Boot + MyBatis
-├─ frontend/                # Vue 3 + Vite + Element Plus
-├─ sql/                     # 数据库脚本（openGauss）
-├─ doc/
-├─ docker-compose.yml       # 本地 PostgreSQL 联调（可选）
-└─ .env.example
+├─ backend/                 # Spring Boot 3 + MyBatis 后端
+├─ frontend/                # Vue 3 + Vite + Element Plus 前端
+├─ sql/                     # openGauss 数据库脚本
+├─ doc/                     # 课程设计文档
+├─ docker-compose.yml       # 本地 PostgreSQL 联调配置（可选）
+└─ .env.example             # 环境变量模板
 ```
 
-## 2. 技术栈
+技术栈：
 
-- 后端：Spring Boot 3、MyBatis、openGauss JDBC（默认）、PostgreSQL JDBC（预留）
-- 前端：Vue 3、Vite、Element Plus、Pinia、Axios
-- 数据库：openGauss（生产/演示优先）
+- 后端：Spring Boot 3、MyBatis、Spring Validation、Spring Actuator、springdoc-openapi。
+- 前端：Vue 3、Vite、Vue Router、Pinia、Element Plus、Axios。
+- 数据库：openGauss 为默认数据库；项目中保留 PostgreSQL JDBC 依赖和配置文件作为兼容预留。
 
-## 3. 数据库初始化（openGauss）
+数据库脚本说明：
 
-按顺序执行：
+| 脚本 | 作用 |
+| --- | --- |
+| `sql/01_create_schema.sql` | 创建表结构、主键、外键、唯一约束、检查约束 |
+| `sql/02_init_data.sql` | 初始化演示数据 |
+| `sql/03_views.sql` | 创建销售业绩、库存汇总、客户价值视图 |
+| `sql/04_indexes.sql` | 创建业务查询索引 |
+| `sql/05_triggers.sql` | 创建订单与车辆状态联动触发器 |
+| `sql/06_procedures.sql` | 创建销售下单、月报、客户历史查询过程/函数 |
+| `sql/07_queries.sql` | Q1-Q8 复杂查询 |
+| `sql/00_deploy_all.sql` | 按顺序执行全部数据库脚本 |
+| `sql/00_reset_and_deploy.sql` | 重置 `public` schema 后重新部署 |
 
-1. `sql/01_create_schema.sql`
-2. `sql/02_init_data.sql`
-3. `sql/03_views.sql`
-4. `sql/04_indexes.sql`
-5. `sql/05_triggers.sql`
-6. `sql/06_procedures.sql`
-7. `sql/07_queries.sql`
+主要 API 前缀：
 
-也可使用一键部署脚本（推荐）：
+- `/api/sales/*`
+- `/api/inventory/*`
+- `/api/report/*`
 
-- `sql/00_deploy_all.sql`：按上述顺序自动执行全部脚本。
-- `sql/00_reset_and_deploy.sql`：先重置 `public` schema，再执行一键部署（适合本地演示反复重建）。
+前端主要页面：
 
-示例：
+- `/login`：系统入口。
+- `/sales`：销售前台。
+- `/inventory`：库存管理。
+- `/report`：报表中心。
 
-```bash
-# 方式1：进入 sql 目录执行
-cd sql
-gsql -d car_sales -f 00_deploy_all.sql
+## 2. 运行环境
 
-# 方式2：仓库根目录直接执行
-gsql -d car_sales -f sql/00_deploy_all.sql
+基础环境：
 
-# 重置并重建
-gsql -d car_sales -f sql/00_reset_and_deploy.sql
-```
+- JDK 17。
+- Maven 3.8+。
+- Node.js 18+，建议配套 npm 9+。
+- openGauss 数据库，默认端口按 `.env.example` 为 `26000`。
+- gsql 客户端，用于执行数据库初始化脚本。
 
-## 4. 启动方式（基于 `.env`）
+后端关键配置：
 
-首次拉取后，先准备本地配置：
+- 默认 Spring Profile：`opengauss`。
+- 默认后端端口：`8080`。
+- 配置文件：
+  - `backend/src/main/resources/application.yml`
+  - `backend/src/main/resources/application-opengauss.yml`
+  - `backend/src/main/resources/application-postgres.yml`
+
+前端关键配置：
+
+- 默认前端开发端口：`5173`。
+- 默认后端请求地址：`http://localhost:8080`。
+
+环境变量来自项目根目录 `.env`，可从模板复制：
 
 ```bash
 cp .env.example .env
 ```
 
-然后编辑 `.env`，至少填写/确认以下字段：
-- `DB_URL`
-- `DB_USERNAME`
-- `DB_PASSWORD`
-- `BACKEND_PORT`
-- `VITE_PORT`
-- `VITE_API_BASE_URL`
+需要确认或修改的字段：
 
-说明：
-- `DB_PASSWORD` 在 `application-opengauss.yml` 中无默认值，未配置将启动失败。
-- 后端端口读取 `BACKEND_PORT`（默认 8080）。
-- 前端 dev 端口读取 `VITE_PORT`（默认 5173）。
-- 前端请求地址读取 `VITE_API_BASE_URL`（默认 `http://localhost:8080`）。
+```text
+BACKEND_PORT=8080
+SPRING_PROFILES_ACTIVE=opengauss
+DB_URL=jdbc:opengauss://127.0.0.1:26000/car_sales?sslmode=disable&currentSchema=public
+DB_USERNAME=car_sales_user
+DB_PASSWORD=CHANGE_ME
+DB_DRIVER=org.opengauss.Driver
+VITE_API_BASE_URL=http://localhost:8080
+VITE_PORT=5173
+```
 
-每次启动前加载 `.env` 到当前 shell：
+注意：`DB_PASSWORD` 没有可用默认值，必须改成实际数据库密码。
+
+## 3. 启动指南
+
+### 3.1 准备数据库
+
+先在 openGauss 中创建数据库和用户，确保 `.env` 中的 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 与实际环境一致。
+
+然后执行数据库脚本。推荐使用重置并重建脚本，适合本地演示和重复测试：
+
+```bash
+gsql -d car_sales -f sql/00_reset_and_deploy.sql
+```
+
+如果不需要重置已有 schema，可执行：
+
+```bash
+gsql -d car_sales -f sql/00_deploy_all.sql
+```
+
+也可以按顺序手动执行：
+
+```bash
+gsql -d car_sales -f sql/01_create_schema.sql
+gsql -d car_sales -f sql/02_init_data.sql
+gsql -d car_sales -f sql/03_views.sql
+gsql -d car_sales -f sql/04_indexes.sql
+gsql -d car_sales -f sql/05_triggers.sql
+gsql -d car_sales -f sql/06_procedures.sql
+gsql -d car_sales -f sql/07_queries.sql
+```
+
+### 3.2 加载环境变量
+
+每次启动后端或前端前，在项目根目录加载 `.env`：
 
 ```bash
 set -a
@@ -79,7 +139,7 @@ source .env
 set +a
 ```
 
-### 4.1 启动后端
+### 3.3 启动后端
 
 ```bash
 cd backend
@@ -87,23 +147,24 @@ mvn clean package
 mvn spring-boot:run
 ```
 
-默认 profile 为 `opengauss`，配置文件：
+启动后可检查：
 
-- `backend/src/main/resources/application.yml`
-- `backend/src/main/resources/application-opengauss.yml`
-- `backend/src/main/resources/application-postgres.yml`（仅预留）
+```text
+GET http://localhost:${BACKEND_PORT}/actuator/health
+GET http://localhost:${BACKEND_PORT}/api/sales/ping
+GET http://localhost:${BACKEND_PORT}/api/inventory/ping
+GET http://localhost:${BACKEND_PORT}/api/report/ping
+```
 
-健康检查（按 `BACKEND_PORT`）：
+默认情况下即：
 
-- `GET http://localhost:${BACKEND_PORT}/actuator/health`
+```text
+http://localhost:8080/actuator/health
+```
 
-示例接口：
+### 3.4 启动前端
 
-- `/api/sales/ping`
-- `/api/inventory/ping`
-- `/api/report/ping`
-
-### 4.2 启动前端
+另开一个终端，加载同一份 `.env` 后启动前端：
 
 ```bash
 cd frontend
@@ -111,56 +172,21 @@ npm install
 npm run dev
 ```
 
-默认地址（按 `VITE_PORT`）：`http://localhost:${VITE_PORT}`
+默认访问地址：
 
-生产构建验证：
+```text
+http://localhost:5173
+```
+
+生产构建检查：
 
 ```bash
 cd frontend
 npm run build
 ```
 
-### 前端路由与页面
+### 3.5 常见问题
 
-- `/login`：登录入口页（系统入口）
-- `/sales`：销售前台（查询我的订单、创建销售订单、创建意向客户）
-- `/inventory`：库存管理（库存查询、车辆入库、库存预警）
-- `/report`：报表中心（月报、业绩榜、畅销车型）
-
-### 前端目录（当前实现）
-
-```text
-frontend/src
-├─ api/                     # 按模块拆分 API 调用
-├─ components/
-│  ├─ sales/                # 销售模块组件
-│  ├─ inventory/            # 库存模块组件
-│  └─ report/               # 报表模块组件
-├─ constants/               # 公共常量（状态枚举等）
-├─ layout/                  # 主布局（侧边菜单 + 顶部栏 + 内容区）
-├─ router/                  # 路由配置（登录 + 主布局子路由）
-├─ utils/                   # request 封装、格式化工具
-└─ views/                   # 模块页面
-```
-
-## 5. 前端协作约定
-
-- 并行开发规范文档：`FRONTEND_AGENT_RULES.md`
-- 三模块并行开发时必须遵守该文档中的：
-  - 文件 ownership 边界
-  - API 参数命名与后端 DTO 一致性
-  - 统一页面结构与交互约定
-  - 提交前构建检查（`npm run build`）
-
-## 6. 约定
-
-- 统一响应结构：`{ code, message, data }`
-- API 前缀：
-  - `/api/sales/*`
-  - `/api/inventory/*`
-  - `/api/report/*`
-- 写操作必须事务化，SQL 必须参数化。
-
-## 7. 迁移说明
-
-已完成一次性切换：旧控制台 `src/` 与根 `pom.xml` 已移除。当前仅维护 Web 架构。
+- 后端启动失败且提示数据库连接异常：检查 openGauss 是否启动、`DB_URL` 是否正确、`DB_PASSWORD` 是否已修改。
+- 前端请求失败：检查后端是否启动，且 `VITE_API_BASE_URL` 是否指向后端实际端口。
+- 数据库脚本执行失败：优先使用 `sql/00_reset_and_deploy.sql` 重建本地演示环境；如果是已有数据环境，不应直接重置 schema。
