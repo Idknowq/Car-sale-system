@@ -118,7 +118,6 @@ CREATE TABLE sales_order (
         FOREIGN KEY (vehicle_vin) REFERENCES vehicle (vehicle_vin),
     CONSTRAINT ck_sales_order_amounts
         CHECK (deposit_amount <= total_amount),
-    CONSTRAINT uk_sales_order_vehicle_vin UNIQUE (vehicle_vin),
     CONSTRAINT ck_sales_order_status
         CHECK (order_status IN ('LOCKED', 'DEPOSIT_PAID', 'COMPLETED', 'CANCELLED'))
 );

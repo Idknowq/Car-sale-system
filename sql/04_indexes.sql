@@ -33,3 +33,8 @@ ON sales_order (customer_id, created_at);
 -- 8) 优化客户售后历史查询（Q6客户完整售后历史按时间线）
 CREATE INDEX idx_service_order_customer_created_at
 ON service_order (customer_id, created_at);
+
+-- 9) 防止同一车辆存在多个有效销售订单，同时允许取消后重新下单
+CREATE UNIQUE INDEX uk_sales_order_vehicle_vin_active
+ON sales_order (vehicle_vin)
+WHERE order_status <> 'CANCELLED';
