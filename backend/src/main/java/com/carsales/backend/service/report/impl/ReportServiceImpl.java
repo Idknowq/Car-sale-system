@@ -11,8 +11,10 @@ import com.carsales.backend.model.vo.report.MonthlySalesReportItemVo;
 import com.carsales.backend.model.vo.report.SalesPerformanceRankingItemVo;
 import com.carsales.backend.service.report.ReportService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ReportServiceImpl implements ReportService {
@@ -45,6 +47,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResult<MonthlySalesReportItemVo> queryMonthlySalesReport(MonthlySalesReportQueryDto query) {
         Integer year = query.getYear();
         Integer month = query.getMonth();
@@ -65,12 +68,20 @@ public class ReportServiceImpl implements ReportService {
 
         try {
             int offset = (pageNo - 1) * pageSize;
-            List<MonthlySalesReportItemVo> records = reportMapper.selectMonthlySalesReportPage(year, month, offset, pageSize);
-            long total = reportMapper.countMonthlySalesReport(year, month);
-            return new PageResult<>(total, pageNo, pageSize, records);
+            String cursorName = buildMonthlyReportCursorName();
+            reportMapper.callMonthlySalesReportProcedure(year, month, cursorName);
+            List<MonthlySalesReportItemVo> allRecords = reportMapper.fetchMonthlySalesReport(cursorName);
+            int total = allRecords.size();
+            int fromIndex = Math.min(offset, total);
+            int toIndex = Math.min(offset + pageSize, total);
+            return new PageResult<>(total, pageNo, pageSize, allRecords.subList(fromIndex, toIndex));
         } catch (Exception ex) {
             throw new BizException(50031, "Query monthly sales report failed: " + ex.getMessage());
         }
+    }
+
+    private String buildMonthlyReportCursorName() {
+        return "cur_monthly_report_" + UUID.randomUUID().toString().replace("-", "");
     }
 
     private void validatePeriodCondition(SalesPerformanceRankingQueryDto query) {

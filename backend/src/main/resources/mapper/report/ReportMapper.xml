@@ -64,23 +64,16 @@
         LIMIT #{topN}
     </select>
 
-    <select id="selectMonthlySalesReportPage" resultType="com.carsales.backend.model.vo.report.MonthlySalesReportItemVo">
-        SELECT
-            stat_year,
-            stat_month,
-            staff_id,
-            staff_name,
-            order_count,
-            sales_amount,
-            gross_profit
-        FROM fn_get_monthly_report(#{year}, #{month})
-        ORDER BY sales_amount DESC, staff_id ASC
-        LIMIT #{pageSize} OFFSET #{offset}
-    </select>
+    <update id="callMonthlySalesReportProcedure" statementType="CALLABLE">
+        {call sp_get_monthly_report(
+            #{year, mode=IN, jdbcType=INTEGER},
+            #{month, mode=IN, jdbcType=INTEGER},
+            #{cursorName, mode=IN, jdbcType=VARCHAR}
+        )}
+    </update>
 
-    <select id="countMonthlySalesReport" resultType="long">
-        SELECT COUNT(1)
-        FROM fn_get_monthly_report(#{year}, #{month})
+    <select id="fetchMonthlySalesReport" resultType="com.carsales.backend.model.vo.report.MonthlySalesReportItemVo">
+        FETCH ALL FROM ${cursorName}
     </select>
 
 </mapper>
